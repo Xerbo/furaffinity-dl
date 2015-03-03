@@ -1,0 +1,2 @@
+# furaffinity-dl
+FurAffinity Downloader
