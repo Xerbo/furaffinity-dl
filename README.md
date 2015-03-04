@@ -18,7 +18,9 @@ Windows users can probably get it to work via Cygwin, but running a virtual mach
 All files from the given section and user will be downloaded to the current directory.
 ### Examples
  `furaffinity-dl gallery/ymxa`
+
  `furaffinity-dl scraps/---`
+
  `furaffinity-dl favorites/kivuli`
 
 ## TODO
