@@ -1,0 +1,59 @@
+#!/bin/bash
+set -e
+
+# wget wrapper with custom user agent
+# cookies also should be added here
+fwget() {
+    wget --user-agent="Mozilla/5.0 furaffinity-dl" $*
+}
+
+if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: $0 SECTION/USER
+Downloads the entire gallery/scraps/favorites of furaffinity.net user.
+
+Examples:
+ $0 gallery/ymxa
+ $0 scraps/---
+ $0 favorites/kivuli"
+    exit 1
+fi
+
+tempfile="$(mktemp)"
+
+base_url=https://www.furaffinity.net/"$1"
+
+url="$base_url"
+page_counter=1
+
+while [ -n "$url" ]; do
+    fwget -O "$tempfile" "$url"
+    grep -q -i "there are no submissions to list" "$tempfile" && break
+
+    artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/')
+
+    for page in $artwork_pages; do
+        # Download the submission page
+        fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
+
+        if grep -q "System Message" "$tempfile"; then
+            echo "WARNING: $page seems to be inaccessible, skipping."
+            continue
+        fi
+
+        # Get the full size image URL.
+        # This will be a facdn.net link, we have to use HTTP
+        # to get around DPI-based page blocking in some countries.
+        image_url='http:'$(grep -E -m 1 '">Download[[:space:]]?</a>' "$tempfile" | cut -d '"' -f 2)
+
+        # TODO: Get the submission title out of the page
+        # this trick may come in handy for avoiding slashes in filenames:
+        # | tr '/' '∕'
+
+        # TODO: prepend a fancy title, date or something
+        wget "$image_url"
+
+    done
+
+    page_counter=$((page_counter + 1))
+    url="$base_url"/"$page_counter"
+done
