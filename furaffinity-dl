@@ -60,12 +60,13 @@ base_url=https://www.furaffinity.net/"$1"
 url="$base_url"
 page_counter=1
 
-while [ -n "$url" ]; do
+# Iterate over the gallery pages with thumbnails and links to artwork view pages
+while true; do
     fwget -O "$tempfile" "$url"
     grep -q -i "there are no submissions to list" "$tempfile" && break
 
+    # Extract links to pages with individual artworks and iterate over them
     artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/')
-
     for page in $artwork_pages; do
         # Download the submission page
         fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
@@ -78,17 +79,14 @@ while [ -n "$url" ]; do
         # Get the full size image URL.
         # This will be a facdn.net link, we have to use HTTP
         # to get around DPI-based page blocking in some countries.
-        image_url='http:'$(grep -E -m 1 --only-matching '"[^"]+">Download[[:space:]]?</a>' "$tempfile" | cut -d '"' -f 2)
+        image_url='http:'$(grep -E --max-count=1 --only-matching '"[^"]+">Download[[:space:]]?</a>' "$tempfile" | cut -d '"' -f 2)
 
         # TODO: Get the submission title out of the page
         # this trick may come in handy for avoiding slashes in filenames:
         # | tr '/' '∕'
 
-        # TODO: prepend a fancy title, date or something
         wget "$image_url"
-
     done
-
     page_counter=$((page_counter + 1))
     url="$base_url"/"$page_counter"
 done
