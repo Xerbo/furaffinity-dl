@@ -3,17 +3,30 @@ set -e
 
 if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: $0 SECTION/USER [YOUR_USERNAME]
-Downloads the entire gallery/scraps/favorites of furaffinity.net user.
+Downloads the entire gallery/scraps/favorites of any furaffinity.net user.
 
 Examples:
- $0 gallery/ymxa
+ $0 gallery/kodardragon
  $0 scraps/---
  $0 favorites/kivuli
 
-You can also log in to FurAffinity to download restricted content, like this:
+You can also log in to FurAffinity and download restricted content, like this:
  $0 gallery/simoom your_username_here"
     exit 1
 fi
+
+runtime_dir="$HOME"'/.cache/furaffinity-dl'
+# umask makes any new files created only readable by the owner.
+# It is necessary to store cookies securely
+(umask u=rwx,g=,o= && mkdir -p "$runtime_dir")
+tempfile="$(umask u=rwx,g=,o= && mktemp --tmpdir=$runtime_dir)"
+cookies_file="$(umask u=rwx,g=,o= && mktemp --tmpdir=$runtime_dir)"
+
+cleanup() {
+    rm -f "$tempfile"
+    rm -f "$cookies_file"
+}
+trap cleanup EXIT
 
 LOGIN_NAME="$2"
 if [ "$LOGIN_NAME" = "" ]; then
@@ -28,18 +41,16 @@ else
     # log in to FurAffinity
     wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
     --referer="https://www.furaffinity.net/login/" \
-    --save-cookies cookies.txt \
+    --save-cookies "$cookies_file" \
     --post-data "action=login&retard_protection=1&name=$LOGIN_NAME&pass=$PASSWORD&login=Login+to%C2%A0FurAffinity" \
     "https://www.furaffinity.net/login/"
 
     # set a wget wrapper with custom user agent and cookies
     fwget() {
         wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
-        --load-cookies cookies.txt $*
+        --load-cookies "$cookies_file" $*
     }
 fi
-
-tempfile="$(mktemp)"
 
 base_url=https://www.furaffinity.net/"$1"
 
