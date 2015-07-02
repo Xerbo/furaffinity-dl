@@ -43,7 +43,10 @@ else
     --referer="https://www.furaffinity.net/login/" \
     --save-cookies "$cookies_file" \
     --post-data "action=login&retard_protection=1&name=$LOGIN_NAME&pass=$PASSWORD&login=Login+to%C2%A0FurAffinity" \
-    "https://www.furaffinity.net/login/"
+    -O - "https://www.furaffinity.net/login/" | grep "erroneous username or password" && {
+        echo "Wrong password for user $LOGIN_NAME. Aborted." >&2
+        exit 1
+    }
 
     # set a wget wrapper with custom user agent and cookies
     fwget() {
