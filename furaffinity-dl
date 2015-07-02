@@ -1,21 +1,42 @@
 #!/bin/bash
 set -e
 
-# wget wrapper with custom user agent
-# cookies also should be added here
-fwget() {
-    wget --user-agent="Mozilla/5.0 furaffinity-dl" $*
-}
-
 if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: $0 SECTION/USER
+    echo "Usage: $0 SECTION/USER [YOUR_USERNAME]
 Downloads the entire gallery/scraps/favorites of furaffinity.net user.
 
 Examples:
  $0 gallery/ymxa
  $0 scraps/---
- $0 favorites/kivuli"
+ $0 favorites/kivuli
+
+You can also log in to FurAffinity to download restricted content, like this:
+ $0 gallery/simoom your_username_here"
     exit 1
+fi
+
+LOGIN_NAME="$2"
+if [ "$LOGIN_NAME" = "" ]; then
+    # set a wget wrapper with custom user agent
+    fwget() {
+        wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" $*
+    }
+else
+    # prompt the user for their password
+    read -r -s -e -p "Password for $LOGIN_NAME (will not be displayed): " PASSWORD
+
+    # log in to FurAffinity
+    wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
+    --referer="https://www.furaffinity.net/login/" \
+    --save-cookies cookies.txt \
+    --post-data "action=login&retard_protection=1&name=$LOGIN_NAME&pass=$PASSWORD&login=Login+to%C2%A0FurAffinity" \
+    "https://www.furaffinity.net/login/"
+
+    # set a wget wrapper with custom user agent and cookies
+    fwget() {
+        wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
+        --load-cookies cookies.txt $*
+    }
 fi
 
 tempfile="$(mktemp)"
