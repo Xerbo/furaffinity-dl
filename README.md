@@ -26,7 +26,7 @@ All files from the given section and user will be downloaded to the current dire
 
 You can also log in to FurAffinity and download restricted content, like this:
 
- `furaffinity-dl gallery/jordicod your_username_here`
+ `furaffinity-dl gallery/mithril07 your_username_here`
 
 In this case you will be prompted for your password. It will not be displayed on the screen as you type it!
 

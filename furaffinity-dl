@@ -11,7 +11,7 @@ Examples:
  $0 favorites/kivuli
 
 You can also log in to FurAffinity and download restricted content, like this:
- $0 gallery/jordicod your_username_here"
+ $0 gallery/mithril07 your_username_here"
     exit 1
 fi
 
