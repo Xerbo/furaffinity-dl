@@ -85,7 +85,7 @@ while true; do
         # this trick may come in handy for avoiding slashes in filenames:
         # | tr '/' '∕'
 
-        wget "$image_url"
+        wget --timestamping "$image_url"
     done
     page_counter=$((page_counter + 1))
     url="$base_url"/"$page_counter"
