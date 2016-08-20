@@ -10,7 +10,7 @@ I'd like to eventually expand it to download the description pages as well. Patc
 Coreutils, bash and wget are the only dependencies.
 
 furaffinity-dl was tested only on Linux. It should also work on Mac and BSDs.
-Windows users can probably get it to work via Cygwin, but running a virtual machine with Linux might be simpler.
+Windows users can probably get it to work via Cygwin or Microsoft's "BASH on Windows", but running a virtual machine with Linux might be simpler.
 
 ## Usage
  `furaffinity-dl section/username`
@@ -24,11 +24,9 @@ All files from the given section and user will be downloaded to the current dire
 
  `furaffinity-dl favorites/kivuli`
 
-You can also log in to FurAffinity and download restricted content, like this:
+You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/export-cookies/) and [for Chrome/Vivaldi](https://addons.mozilla.org/en-US/firefox/addon/export-cookies/)) and pass them to the script as a second parameter, like this:
 
- `furaffinity-dl gallery/mithril07 your_username_here`
-
-In this case you will be prompted for your password. It will not be displayed on the screen as you type it!
+ `furaffinity-dl gallery/gonnaneedabiggerboat /path/to/your/cookies.txt`
 
 ## TODO
  * Download author's description of the artwork, and ideally the entire description page along with user comments

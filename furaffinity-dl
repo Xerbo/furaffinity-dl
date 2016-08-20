@@ -11,47 +11,29 @@ Examples:
  $0 favorites/kivuli
 
 You can also log in to FurAffinity and download restricted content, like this:
- $0 gallery/mithril07 your_username_here"
+ $0 gallery/gonnaneedabiggerboat /path/to/your/cookies.txt"
     exit 1
 fi
 
 runtime_dir="$HOME"'/.cache/furaffinity-dl'
-# umask makes any new files created only readable by the owner.
-# It is necessary to store cookies securely
-(umask u=rwx,g=,o= && mkdir -p "$runtime_dir")
 tempfile="$(umask u=rwx,g=,o= && mktemp --tmpdir=$runtime_dir)"
-cookies_file="$(umask u=rwx,g=,o= && mktemp --tmpdir=$runtime_dir)"
 
 cleanup() {
     rm -f "$tempfile"
-    rm -f "$cookies_file"
 }
 trap cleanup EXIT
 
-LOGIN_NAME="$2"
-if [ "$LOGIN_NAME" = "" ]; then
+COOKIES_FILE="$2"
+if [ "$COOKIES_FILE" = "" ]; then
     # set a wget wrapper with custom user agent
     fwget() {
         wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" $*
     }
 else
-    # prompt the user for their password
-    read -r -s -e -p "Password for $LOGIN_NAME (will not be displayed): " PASSWORD
-
-    # log in to FurAffinity
-    wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
-    --referer="https://www.furaffinity.net/login/" \
-    --save-cookies "$cookies_file" \
-    --post-data "action=login&retard_protection=1&name=$LOGIN_NAME&pass=$PASSWORD&login=Login+to%C2%A0FurAffinity" \
-    -O - "https://www.furaffinity.net/login/" | grep "erroneous username or password" && {
-        echo "Wrong password for user $LOGIN_NAME. Aborted." >&2
-        exit 1
-    }
-
     # set a wget wrapper with custom user agent and cookies
     fwget() {
         wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
-        --load-cookies "$cookies_file" $*
+        --load-cookies "$COOKIES_FILE" $*
     }
 fi
 
@@ -63,6 +45,23 @@ page_counter=1
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
     fwget -O "$tempfile" "$url"
+    if grep -q 'furaffinity.net/login/' "$tempfile"; then
+        echo "--------------
+
+ERROR: You have provided a cookies file, but it does not contain valid cookies.
+
+If this file used to work, this means that the cookies have expired;
+you will have to log in to FurAffinity from your web browser and export the cookies again.
+
+If this is the first time you're trying to use cookies, make sure you have exported them
+in Netscape format (this is normally done through \"cookie export\" browser extensions)
+and supplied the correct path to the cookies.txt file to this script.
+
+If that doesn't resolve the issue, please report the problem at
+https://github.com/Shnatsel/furaffinity-dl/issues" >&2
+        exit 1
+    fi
+    # check if we've reached last page
     grep -q -i "there are no submissions to list" "$tempfile" && break
 
     # Extract links to pages with individual artworks and iterate over them
