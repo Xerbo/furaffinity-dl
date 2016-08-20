@@ -20,7 +20,7 @@ mkdir -p "$runtime_dir"
 tempfile="$(umask u=rwx,g=,o= && mktemp --tmpdir=$runtime_dir)"
 
 cleanup() {
-    rm -f "$runtime_dir"
+    rm -r "$runtime_dir"
 }
 trap cleanup EXIT
 
