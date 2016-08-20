@@ -33,3 +33,7 @@ You can also log in to download restricted content. To do that, log in to FurAff
 
 ## Disclaimer
 It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them. For further disclaimers see LICENSE.
+
+## See also
+
+There is a similar downloader for VCL art library, see https://github.com/Shnatsel/vcl-dl
