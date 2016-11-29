@@ -46,7 +46,7 @@ page_counter=1
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
     fwget -O "$tempfile" "$url"
-    if [ "$COOKIES_FILE" != "" ] grep -q 'furaffinity.net/login/' "$tempfile"; then
+    if [ "$COOKIES_FILE" != "" ] && grep -q 'furaffinity.net/login/' "$tempfile"; then
         echo "--------------
 
 ERROR: You have provided a cookies file, but it does not contain valid cookies.
