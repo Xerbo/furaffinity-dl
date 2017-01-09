@@ -17,7 +17,7 @@ fi
 
 runtime_dir="$HOME"'/.cache/furaffinity-dl'
 mkdir -p "$runtime_dir"
-tempfile="$(umask u=rwx,g=,o= && mktemp --tmpdir=$runtime_dir)"
+tempfile="$(umask u=rwx,g=,o= && mktemp $runtime_dir/fa-dl.XXXXXXXXXX)"
 
 cleanup() {
     rm -r "$tempfile"
