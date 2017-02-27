@@ -66,7 +66,7 @@ https://github.com/Shnatsel/furaffinity-dl/issues" >&2
     grep -q -i "there are no submissions to list" "$tempfile" && break
 
     # Extract links to pages with individual artworks and iterate over them
-    artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/')
+    artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)
     for page in $artwork_pages; do
         # Download the submission page
         fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
