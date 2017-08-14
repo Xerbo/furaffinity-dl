@@ -1,0 +1,92 @@
+#!/bin/bash
+set -e
+
+if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: $0 SECTION/USER [YOUR_USERNAME]
+Downloads the entire gallery/scraps/favorites of any furaffinity.net user.
+
+Examples:
+ $0 gallery/kodardragon
+ $0 scraps/---
+ $0 favorites/kivuli
+
+You can also log in to FurAffinity and download restricted content, like this:
+ $0 gallery/gonnaneedabiggerboat /path/to/your/cookies.txt"
+    exit 1
+fi
+
+runtime_dir="$HOME"'/.cache/furaffinity-dl'
+mkdir -p "$runtime_dir"
+tempfile="$(umask u=rwx,g=,o= && mktemp $runtime_dir/fa-dl.XXXXXXXXXX)"
+
+cleanup() {
+    rm -r "$tempfile"
+}
+trap cleanup EXIT
+
+COOKIES_FILE="$2"
+if [ "$COOKIES_FILE" = "" ]; then
+    # set a wget wrapper with custom user agent
+    fwget() {
+        wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" $*
+    }
+else
+    # set a wget wrapper with custom user agent and cookies
+    fwget() {
+        wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
+        --load-cookies "$COOKIES_FILE" $*
+    }
+fi
+
+base_url=https://www.furaffinity.net/"$1"
+
+url="$base_url"
+page_counter=1
+
+# Iterate over the gallery pages with thumbnails and links to artwork view pages
+while true; do
+    fwget -O "$tempfile" "$url"
+    if [ "$COOKIES_FILE" != "" ] && grep -q 'furaffinity.net/login/' "$tempfile"; then
+        echo "--------------
+
+ERROR: You have provided a cookies file, but it does not contain valid cookies.
+
+If this file used to work, this means that the cookies have expired;
+you will have to log in to FurAffinity from your web browser and export the cookies again.
+
+If this is the first time you're trying to use cookies, make sure you have exported them
+in Netscape format (this is normally done through \"cookie export\" browser extensions)
+and supplied the correct path to the cookies.txt file to this script.
+
+If that doesn't resolve the issue, please report the problem at
+https://github.com/Shnatsel/furaffinity-dl/issues" >&2
+        exit 1
+    fi
+    # check if we've reached last page
+    grep -q -i "there are no submissions to list" "$tempfile" && break
+
+    # Extract links to pages with individual artworks and iterate over them
+    artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)
+    for page in $artwork_pages; do
+        # Download the submission page
+        fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
+
+        if grep -q "System Message" "$tempfile"; then
+            echo "WARNING: $page seems to be inaccessible, skipping."
+            continue
+        fi
+	
+        # Get the full size image URL.
+        # This will be a facdn.net link, we have to use HTTP
+        # to get around DPI-based page blocking in some countries.
+        image_url='http:'$(grep -E --max-count=1 --only-matching 'href="//d\.facdn\.net/art/.+\.[[:alpha:]]{1,4}">Download' "$tempfile" | cut -d '"' -f 2)
+
+        # TODO: Get the submission title out of the page
+        # this trick may come in handy for avoiding slashes in filenames:
+        # | tr '/' '∕'
+
+        wget --timestamping "$image_url" -P ./exports/"$1"
+    done
+    page_counter=$((page_counter + 1))
+    url="$base_url"/"$page_counter"
+done
