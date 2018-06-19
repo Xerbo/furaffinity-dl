@@ -38,10 +38,7 @@ else
     }
 fi
 
-base_url=https://www.furaffinity.net/"$1"
-
-url="$base_url"
-page_counter=1
+url=https://www.furaffinity.net/"$1"
 
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
@@ -62,8 +59,9 @@ If that doesn't resolve the issue, please report the problem at
 https://github.com/Shnatsel/furaffinity-dl/issues" >&2
         exit 1
     fi
-    # check if we've reached last page
-    grep -q -i "there are no submissions to list" "$tempfile" && break
+
+    # Get URL for next page out of "Next" button. Required for favorites, pages of which are not numbered
+    next_page_url="$(grep '<a class="button-link right" href="' "$tempfile" | grep '">Next &nbsp;&#x276f;&#x276f;</a>' | cut -d '"' -f 4 | sort -u)"
 
     # Extract links to pages with individual artworks and iterate over them
     artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)
@@ -75,7 +73,7 @@ https://github.com/Shnatsel/furaffinity-dl/issues" >&2
             echo "WARNING: $page seems to be inaccessible, skipping."
             continue
         fi
-	
+    
         # Get the full size image URL.
         # This will be a facdn.net link, we have to use HTTP
         # to get around DPI-based page blocking in some countries.
@@ -87,6 +85,7 @@ https://github.com/Shnatsel/furaffinity-dl/issues" >&2
 
         wget --timestamping "$image_url"
     done
-    page_counter=$((page_counter + 1))
-    url="$base_url"/"$page_counter"
+
+    [ "$next_page_url" = "" ] && break
+    url='https://www.furaffinity.net'"$next_page_url"
 done
