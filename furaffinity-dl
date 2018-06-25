@@ -77,7 +77,7 @@ https://github.com/Shnatsel/furaffinity-dl/issues" >&2
         # Get the full size image URL.
         # This will be a facdn.net link, we have to use HTTP
         # to get around DPI-based page blocking in some countries.
-        image_url='http:'$(grep --only-matching --max-count=1 '<b><a href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
+        image_url='http:'$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
 
         # TODO: Get the submission title out of the page
         # this trick may come in handy for avoiding slashes in filenames:
