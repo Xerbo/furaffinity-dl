@@ -10,7 +10,7 @@ I'd like to eventually expand it to download the description pages as well. Patc
 Coreutils, bash and wget are the only dependencies.
 
 furaffinity-dl was tested only on Linux. It should also work on Mac and BSDs.
-Windows users can probably get it to work via Cygwin or Microsoft's "BASH on Windows".
+Windows users can get it to work via Microsoft's "BASH on Windows". Cygwin is not supported.
 
 ## Usage
  `furaffinity-dl section/username`
