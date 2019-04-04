@@ -135,12 +135,7 @@ https://github.com/Xerbo/furaffinity-dl-ng/issues" >&2
         wget "$image_url" -O "$file"
         
         # Add metadata
-        if [[ $(file $file) =~ (MPEG|audio) ]]; then
-            # Use exiftool for injecting metadata into pictures (if it's installed)
-            if [ $exiftool ] && [ $metadata ]; then
-                exiftool "$file" -description="$description" -title="$title"
-            fi
-        else
+        if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
             # Use eyeD3 for injecting injecting metadata into audio files (if it's installed)
             if [ $eyed3 ] && [ $metadata ]; then
                 if [ -z "$description" ]; then
@@ -149,6 +144,11 @@ https://github.com/Xerbo/furaffinity-dl-ng/issues" >&2
                     # HACK eyeD3 throws an error if a description containing a ":"
                     eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
                 fi
+            fi
+        else
+            # Use exiftool for injecting metadata into pictures (if it's installed)
+            if [ $exiftool ] && [ $metadata ]; then
+                exiftool "$file" -description="$description" -title="$title"
             fi
         fi
     done
