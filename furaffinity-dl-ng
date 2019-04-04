@@ -143,7 +143,12 @@ https://github.com/Xerbo/furaffinity-dl-ng/issues" >&2
         else
             # Use eyeD3 for injecting injecting metadata into audio files (if it's installed)
             if [ $eyed3 ] && [ $metadata ]; then
-                eyeD3 -t "$title" --add-comment "$description" "$file"
+                if [ -z "$description" ]; then
+                    eyeD3 -t "$title" "$file"
+                else
+                    # HACK eyeD3 throws an error if a description containing a ":"
+                    eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
+                fi
             fi
         fi
     done
