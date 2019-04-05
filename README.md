@@ -27,7 +27,7 @@ All files from the given section and user will be downloaded to the current dire
 
 You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome/Vivaldi](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)) and pass them to the script as a second parameter, like this:
 
- `furaffinity-dl gallery/gonnaneedabiggerboat /path/to/your/cookies.txt`
+ `furaffinity-dl -c=/path/to/your/cookies.txt gallery/gonnaneedabiggerboat`
 
 ## TODO
  * Download user bio, post tags and ideally user comments
