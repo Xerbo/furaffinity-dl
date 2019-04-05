@@ -145,7 +145,7 @@ https://github.com/Xerbo/furaffinity-dl-ng/issues" >&2
                     eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
                 fi
             fi
-        else
+        elif [ $file_type == "png" ] || [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
             # Use exiftool for injecting metadata into pictures (if it's installed)
             if [ $exiftool ] && [ $metadata ]; then
                 exiftool "$file" -description="$description" -title="$title"
