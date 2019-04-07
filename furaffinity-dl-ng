@@ -34,7 +34,7 @@ Examples:
  $0 --out=koul favorites/koul 
 
 You can also log in to FurAffinity to download restricted content, like this:
- $0 gallery/gonnaneedabiggerboat -c=/path/to/your/cookies.txt
+ $0 -c=/path/to/your/cookies.txt gallery/gonnaneedabiggerboat
 
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them."
     exit 1
