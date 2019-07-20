@@ -14,16 +14,16 @@ Windows users can get it to work via Microsoft's [WSL](https://docs.microsoft.co
 Make it executable with
  `chmod +x faraffinity-dl-ng`
 And run it with
- `./faraffinity-dl-ng section/username`
+ `./furaffinity-dl-ng section/username`
 
 All files from the given section and user will be downloaded to the current directory.
 
 ### Examples
- `./faraffinity-dl-ng gallery/mylafox`
+ `./furaffinity-dl-ng gallery/mylafox`
 
- `./faraffinity-dl-ng -o=mylasArt gallery/mylafox`
+ `./furaffinity-dl-ng -o=mylasArt gallery/mylafox`
 
- `./faraffinity-dl-ng --out=koulsFavs favorites/koul`
+ `./furaffinity-dl-ng --out=koulsFavs favorites/koul`
 
 You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome/Vivaldi](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)) and pass them to the script as a second parameter, like this:
 
@@ -33,4 +33,4 @@ You can also log in to download restricted content. To do that, log in to FurAff
  * Download user bio, post tags and ideally user comments
 
 ## Disclaimer
-It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them. For further disclaimers see LICENSE.
+It is your own responsibility to check whether batch downloading is allowed by FurAffinity's terms of service and to abide by them. For further disclaimers see LICENSE.
