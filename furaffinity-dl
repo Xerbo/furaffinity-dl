@@ -1,52 +1,99 @@
 #!/bin/bash
 set -e
 
-if [ "$1" = "" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: $0 SECTION/USER [YOUR_USERNAME]
-Downloads the entire gallery/scraps/favorites of any furaffinity.net user.
-
-Examples:
- $0 gallery/kodardragon
- $0 scraps/---
- $0 favorites/kivuli
-
-You can also log in to FurAffinity and download restricted content, like this:
- $0 gallery/gonnaneedabiggerboat /path/to/your/cookies.txt"
-    exit 1
+# Detect installed applications
+if [ -f /usr/bin/eyeD3 ]; then
+    eyed3=true
+else
+    eyed3=false
+    echo "INFO: eyed3 is not installed, no metadata will be injected into music files."
+fi
+if [ -f /usr/bin/exiftool ]; then
+    exiftool=true
+else
+    exiftool=false
+    echo "INFO: exiftool is not installed, no metadata will be injected into pictures."
 fi
 
-runtime_dir="$HOME"'/.cache/furaffinity-dl'
-mkdir -p "$runtime_dir"
-tempfile="$(umask u=rwx,g=,o= && mktemp $runtime_dir/fa-dl.XXXXXXXXXX)"
+# Helper functions
+help() {
+    echo "Usage: $0 SECTION/USER [ARGUMENTS]
+Downloads the entire gallery/scraps/favorites of any furaffinity user.
 
+Arguments:
+ -h --help       This text
+ -i --http       Use an insecure connection
+ -o --out        The directory to put files in
+ -c --cookiefile If you need to download restricted content
+                 you can provide a path to a cookie file
+ -p --nometa     Plain file without any additional metadata
+
+Examples:
+ $0 gallery/mylafox
+ $0 -o=myla gallery/mylafox
+ $0 --out=koul favorites/koul 
+
+You can also log in to FurAffinity to download restricted content, like this:
+ $0 -c=/path/to/your/cookies.txt gallery/gonnaneedabiggerboat
+
+DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them."
+    exit 1
+}
 cleanup() {
     rm -r "$tempfile"
 }
+
+# Arguments
+if [ $# -eq 0 ]; then
+    help
+fi
+
+prefix="https:"
+outdir="."
+metadata=true;
+case "$1" in
+    # Help
+    -h|--help) help;;
+    
+    # HTTP / HTTPS
+    -i|--http) prefix="http:";;
+
+    # Output directory
+    -o=*|--out=*) outdir="${1#*=}"; shift 1;;
+    
+    # Cookie file
+    -c=*|--cookiefile=*) cookiefile="${1#*=}"; shift 1;;
+    
+    # Metadata
+    -p|--nometa) meta=false;;
+esac
+mkdir -p "$outdir"
+
+runtime_dir="$HOME"'/.cache/furaffinity-dl-ng'
+mkdir -p "$runtime_dir"
+tempfile="$(umask u=rwx,g=,o= && mktemp $runtime_dir/fa-dl.XXXXXXXXXX)"
+
 trap cleanup EXIT
 
-COOKIES_FILE="$2"
-if [ "$COOKIES_FILE" = "" ]; then
-    # set a wget wrapper with custom user agent
+if [ "$cookiefile" = "" ]; then
+    # Set wget with a custom user agent
     fwget() {
-        wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" $*
+        wget -nv --user-agent="Mozilla/5.0 furaffinity-dl-ng (https://github.com/Xerbo/furaffinity-dl-ng)" $*
     }
 else
-    # set a wget wrapper with custom user agent and cookies
+    # Set wget with a custom user agent and cookies
     fwget() {
-        wget --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Shnatsel/furaffinity-dl)" \
-        --load-cookies "$COOKIES_FILE" $*
+        wget -nv --user-agent="Mozilla/5.0 furaffinity-dl-ng (https://github.com/Xerbo/furaffinity-dl-ng)" --load-cookies "$cookiefile" $*
     }
 fi
 
-url=https://www.furaffinity.net/"$1"
+url="https://www.furaffinity.net/${@: -1}"
 
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
-    fwget -O "$tempfile" "$url"
-    if [ "$COOKIES_FILE" != "" ] && grep -q 'furaffinity.net/login/' "$tempfile"; then
-        echo "--------------
-
-ERROR: You have provided a cookies file, but it does not contain valid cookies.
+    fwget "$url" -O "$tempfile"
+    if [ "$cookiefile" != "" ] && grep -q 'furaffinity.net/login/' "$tempfile"; then
+        echo "ERROR: You have provided a cookies file, but it does not contain valid cookies.
 
 If this file used to work, this means that the cookies have expired;
 you will have to log in to FurAffinity from your web browser and export the cookies again.
@@ -56,7 +103,7 @@ in Netscape format (this is normally done through \"cookie export\" browser exte
 and supplied the correct path to the cookies.txt file to this script.
 
 If that doesn't resolve the issue, please report the problem at
-https://github.com/Shnatsel/furaffinity-dl/issues" >&2
+https://github.com/Xerbo/furaffinity-dl-ng/issues" >&2
         exit 1
     fi
 
@@ -75,15 +122,35 @@ https://github.com/Shnatsel/furaffinity-dl/issues" >&2
         fi
     
         # Get the full size image URL.
-        # This will be a facdn.net link, we have to use HTTP
-        # to get around DPI-based page blocking in some countries.
-        image_url='http:'$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
-
-        # TODO: Get the submission title out of the page
-        # this trick may come in handy for avoiding slashes in filenames:
-        # | tr '/' '∕'
-
-        wget --timestamping "$image_url"
+        # This will be a facdn.net link, we will default to HTTPS
+        # but this can be disabled with -i or --http for specific reasons
+        image_url=$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
+        
+        # Get metadata
+        description=$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f4)
+        title=$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f4)
+        file_type=${image_url##*.}
+        file="$outdir/$title.$file_type"
+        
+        wget "$image_url" -O "$file"
+        
+        # Add metadata
+        if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
+            # Use eyeD3 for injecting injecting metadata into audio files (if it's installed)
+            if [ $eyed3 ] && [ $metadata ]; then
+                if [ -z "$description" ]; then
+                    eyeD3 -t "$title" "$file"
+                else
+                    # HACK eyeD3 throws an error if a description containing a ":"
+                    eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
+                fi
+            fi
+        elif [ $file_type == "png" ] || [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
+            # Use exiftool for injecting metadata into pictures (if it's installed)
+            if [ $exiftool ] && [ $metadata ]; then
+                exiftool "$file" -description="$description" -title="$title"
+            fi
+        fi
     done
 
     [ "$next_page_url" = "" ] && break
