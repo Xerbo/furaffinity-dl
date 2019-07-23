@@ -12,22 +12,22 @@ Windows users can get it to work via Microsoft's [WSL](https://docs.microsoft.co
 
 ## Usage
 Make it executable with
- `chmod +x faraffinity-dl-ng`
-And run it with
- `./furaffinity-dl-ng section/username`
+ `chmod +x faraffinity-dl`
+And then run it with
+ `./furaffinity-dl section/username`
 
 All files from the given section and user will be downloaded to the current directory.
 
 ### Examples
- `./furaffinity-dl-ng gallery/mylafox`
+ `./furaffinity-dl gallery/mylafox`
 
- `./furaffinity-dl-ng -o=mylasArt gallery/mylafox`
+ `./furaffinity-dl -o mylasArt gallery/mylafox`
 
- `./furaffinity-dl-ng --out=koulsFavs favorites/koul`
+ `./furaffinity-dl -o koulsFavs favorites/koul`
 
 You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome/Vivaldi](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)) and pass them to the script as a second parameter, like this:
 
- `./furaffinity-dl -c=/path/to/your/cookies.txt gallery/gonnaneedabiggerboat`
+ `./furaffinity-dl -c /path/to/your/cookies.txt gallery/gonnaneedabiggerboat`
 
 ## TODO
  * Download user bio, post tags and ideally user comments

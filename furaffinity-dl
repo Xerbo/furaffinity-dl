@@ -1,99 +1,94 @@
 #!/bin/bash
 set -e
 
-# Detect installed applications
-if [ -f /usr/bin/eyeD3 ]; then
-    eyed3=true
-else
-    eyed3=false
-    echo "INFO: eyed3 is not installed, no metadata will be injected into music files."
+# Detect installed metadata injectors
+eyed3=true
+if [ -z $(command -v eyeD3) ]; then
+	eyed3=false
+	echo "INFO: eyed3 is not installed, no metadata will be injected into music files."
 fi
-if [ -f /usr/bin/exiftool ]; then
-    exiftool=true
-else
-    exiftool=false
-    echo "INFO: exiftool is not installed, no metadata will be injected into pictures."
+
+exiftool=true
+if [ -z $(command -v exiftool) ]; then
+	exiftool=false
+	echo "INFO: exiftool is not installed, no metadata will be injected into pictures."
 fi
 
 # Helper functions
 help() {
-    echo "Usage: $0 SECTION/USER [ARGUMENTS]
+	echo "Usage: $0 [ARGUMENTS] SECTION/USER
 Downloads the entire gallery/scraps/favorites of any furaffinity user.
 
 Arguments:
- -h --help       This text
- -i --http       Use an insecure connection
- -o --out        The directory to put files in
- -c --cookiefile If you need to download restricted content
-                 you can provide a path to a cookie file
- -p --nometa     Plain file without any additional metadata
+ -h (H)elp screen
+ -i Use an (I)nsecure connection when downloading
+ -o The (O)utput directory to put files in
+ -c If you need to download restricted content
+    you can provide a path to a (C)ookie file
+ -p (P)lain file without any additional metadata
 
 Examples:
  $0 gallery/mylafox
- $0 -o=myla gallery/mylafox
- $0 --out=koul favorites/koul 
+ $0 -o mylasArt gallery/mylafox
+ $0 -o koulsFavs favorites/koul 
 
 You can also log in to FurAffinity to download restricted content, like this:
- $0 -c=/path/to/your/cookies.txt gallery/gonnaneedabiggerboat
+ $0 -c /path/to/your/cookies.txt gallery/gonnaneedabiggerboat
 
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them."
-    exit 1
+	exit 1
 }
 cleanup() {
-    rm -r "$tempfile"
+	rm -r "$tempfile"
 }
 
 # Arguments
-if [ $# -eq 0 ]; then
-    help
-fi
+[[ $# -eq 0 ]] && help
 
-prefix="https:"
 outdir="."
-metadata=true;
-case "$1" in
-    # Help
-    -h|--help) help;;
-    
-    # HTTP / HTTPS
-    -i|--http) prefix="http:";;
+prefix="https:"
+metadata=true
+while getopts 'o:c:i:p:h:' flag; do
+   case "${flag}" in
+      o) outdir=${OPTARG};;
+      c) cookiefile=${OPTARG};;
+      i) prefix="http:";;
+      p) metadata=false;;
+      h) help;;
+      *) help;;
+   esac
+done
 
-    # Output directory
-    -o=*|--out=*) outdir="${1#*=}"; shift 1;;
-    
-    # Cookie file
-    -c=*|--cookiefile=*) cookiefile="${1#*=}"; shift 1;;
-    
-    # Metadata
-    -p|--nometa) meta=false;;
-esac
+# Attempt to create the output directory
 mkdir -p "$outdir"
 
-runtime_dir="$HOME"'/.cache/furaffinity-dl-ng'
+# Setup runtime directory
+runtime_dir="$HOME"'/.cache/furaffinity-dl'
 mkdir -p "$runtime_dir"
 tempfile="$(umask u=rwx,g=,o= && mktemp $runtime_dir/fa-dl.XXXXXXXXXX)"
 
+# Call cleanup function on exit
 trap cleanup EXIT
 
-if [ "$cookiefile" = "" ]; then
-    # Set wget with a custom user agent
-    fwget() {
-        wget -nv --user-agent="Mozilla/5.0 furaffinity-dl-ng (https://github.com/Xerbo/furaffinity-dl-ng)" $*
-    }
+if [ -z "$cookiefile" ]; then
+	# Set wget with a custom user agent
+	fwget() {
+		wget -nv --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Xerbo/furaffinity-dl)" $*
+	}
 else
-    # Set wget with a custom user agent and cookies
-    fwget() {
-        wget -nv --user-agent="Mozilla/5.0 furaffinity-dl-ng (https://github.com/Xerbo/furaffinity-dl-ng)" --load-cookies "$cookiefile" $*
-    }
+	# Set wget with a custom user agent and cookies
+	fwget() {
+		wget -nv --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Xerbo/furaffinity-dl)" --load-cookies "$cookiefile" $*
+	}
 fi
 
 url="https://www.furaffinity.net/${@: -1}"
 
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
-    fwget "$url" -O "$tempfile"
-    if [ "$cookiefile" != "" ] && grep -q 'furaffinity.net/login/' "$tempfile"; then
-        echo "ERROR: You have provided a cookies file, but it does not contain valid cookies.
+	fwget "$url" -O "$tempfile"
+	if [ -n "$cookiefile" ] && grep -q 'furaffinity.net/login/' "$tempfile"; then
+		echo "ERROR: You have provided a cookies file, but it does not contain valid cookies.
 
 If this file used to work, this means that the cookies have expired;
 you will have to log in to FurAffinity from your web browser and export the cookies again.
@@ -103,56 +98,58 @@ in Netscape format (this is normally done through \"cookie export\" browser exte
 and supplied the correct path to the cookies.txt file to this script.
 
 If that doesn't resolve the issue, please report the problem at
-https://github.com/Xerbo/furaffinity-dl-ng/issues" >&2
-        exit 1
-    fi
+https://github.com/Xerbo/furaffinity-dl/issues" >&2
+		exit 1
+	fi
 
-    # Get URL for next page out of "Next" button. Required for favorites, pages of which are not numbered
-    next_page_url="$(grep '<a class="button-link right" href="' "$tempfile" | grep '">Next &nbsp;&#x276f;&#x276f;</a>' | cut -d '"' -f 4 | sort -u)"
+	# Get URL for next page out of "Next" button. Required for favorites, pages of which are not numbered
+	next_page_url="$(grep '<a class="button-link right" href="' "$tempfile" | grep '">Next &nbsp;&#x276f;&#x276f;</a>' | cut -d '"' -f 4 | sort -u)"
 
-    # Extract links to pages with individual artworks and iterate over them
-    artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)
-    for page in $artwork_pages; do
-        # Download the submission page
-        fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
+	# Extract links to pages with individual artworks and iterate over them
+	artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)
+	for page in $artwork_pages; do
+		# Download the submission page
+		fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
 
-        if grep -q "System Message" "$tempfile"; then
-            echo "WARNING: $page seems to be inaccessible, skipping."
-            continue
-        fi
-    
-        # Get the full size image URL.
-        # This will be a facdn.net link, we will default to HTTPS
-        # but this can be disabled with -i or --http for specific reasons
-        image_url=$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
-        
-        # Get metadata
-        description=$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f4)
-        title=$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f4)
-        file_type=${image_url##*.}
-        file="$outdir/$title.$file_type"
-        
-        wget "$image_url" -O "$file"
-        
-        # Add metadata
-        if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
-            # Use eyeD3 for injecting injecting metadata into audio files (if it's installed)
-            if [ $eyed3 ] && [ $metadata ]; then
-                if [ -z "$description" ]; then
-                    eyeD3 -t "$title" "$file"
-                else
-                    # HACK eyeD3 throws an error if a description containing a ":"
-                    eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
-                fi
-            fi
-        elif [ $file_type == "png" ] || [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
-            # Use exiftool for injecting metadata into pictures (if it's installed)
-            if [ $exiftool ] && [ $metadata ]; then
-                exiftool "$file" -description="$description" -title="$title"
-            fi
-        fi
-    done
+		if grep -q "System Message" "$tempfile"; then
+			echo "WARNING: $page seems to be inaccessible, skipping."
+			continue
+		fi
+	
+		# Get the full size image URL.
+		# This will be a facdn.net link, we will default to HTTPS
+		# but this can be disabled with -i or --http for specific reasons
+		image_url=$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
+		
+		# Get metadata
+		description=$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f4)
+		title=$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f4)
+		title="${title%" by"*}" # Remove the " by Artist" bit
+		file_type=${image_url##*.}
+		file="$outdir/$title.$file_type"
 
-    [ "$next_page_url" = "" ] && break
-    url='https://www.furaffinity.net'"$next_page_url"
+		# Download the image		
+		wget "$image_url" -O "$file"
+		
+		# Add metadata
+		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
+			# Use eyeD3 for injecting metadata into audio files (if it's installed)
+			if [ $eyed3 ] && [ $metadata ]; then
+				if [ -z "$description" ]; then
+					eyeD3 -t "$title" "$file"
+				else
+					# HACK: eyeD3 throws an error if a description containing a ":"
+					eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
+				fi
+			fi
+		elif [ $file_type == "png" ] || [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
+			# Use exiftool for injecting metadata into pictures (if it's installed)
+			if [ $exiftool ] && [ $metadata ]; then
+				exiftool "$file" -description="$description" -title="$title" -overwrite_original
+			fi
+		fi
+	done
+
+	[ -z "$next_page_url" ] && break
+	url='https://www.furaffinity.net'"$next_page_url"
 done
