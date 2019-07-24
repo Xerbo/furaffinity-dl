@@ -48,7 +48,7 @@ cleanup() {
 outdir="."
 prefix="https:"
 metadata=true
-while getopts 'o:c:i:p:h:' flag; do
+while getopts 'o:c:iph' flag; do
    case "${flag}" in
       o) outdir=${OPTARG};;
       c) cookiefile=${OPTARG};;
