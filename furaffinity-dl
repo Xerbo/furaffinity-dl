@@ -30,7 +30,7 @@ Arguments:
 Examples:
  $0 gallery/mylafox
  $0 -o mylasArt gallery/mylafox
- $0 -o koulsFavs favorites/koul 
+ $0 -o koulsFavs favorites/koul
 
 You can also log in to FurAffinity to download restricted content, like this:
  $0 -c /path/to/your/cookies.txt gallery/gonnaneedabiggerboat
@@ -134,7 +134,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		# Add metadata
 		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
 			# Use eyeD3 for injecting metadata into audio files (if it's installed)
-			if [ $eyed3 ] && [ $metadata ]; then
+			if [ $eyed3 = true ] && [ $metadata = true ]; then
 				if [ -z "$description" ]; then
 					eyeD3 -t "$title" "$file"
 				else
@@ -142,9 +142,9 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 					eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
 				fi
 			fi
-		elif [ $file_type == "png" ] || [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
+		elif [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
 			# Use exiftool for injecting metadata into pictures (if it's installed)
-			if [ $exiftool ] && [ $metadata ]; then
+			if [ $exiftool = true ] && [ $metadata = true ]; then
 				exiftool "$file" -description="$description" -title="$title" -overwrite_original
 			fi
 		fi
