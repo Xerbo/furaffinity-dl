@@ -26,6 +26,8 @@ Arguments:
  -c If you need to download restricted content
     you can provide a path to a (C)ookie file
  -p (P)lain file without any additional metadata
+ -r Don't (R)ename files, just give them the same
+    filename as on facdn
 
 Examples:
  $0 gallery/mylafox
@@ -48,12 +50,14 @@ cleanup() {
 outdir="."
 prefix="https:"
 metadata=true
-while getopts 'o:c:iph' flag; do
+rename=true
+while getopts 'o:c:iphr' flag; do
    case "${flag}" in
       o) outdir=${OPTARG};;
       c) cookiefile=${OPTARG};;
       i) prefix="http:";;
       p) metadata=false;;
+	  r) rename=false;;
       h) help;;
       *) help;;
    esac
@@ -130,7 +134,11 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		file="$outdir/$title.$file_type"
 
 		# Download the image		
-		wget "$image_url" -O "$file"
+		if [ $rename = true ]; then
+			wget "$image_url" -O "$file"
+		else
+			wget "$image_url" -P "$outdir"
+		fi
 		
 		# Add metadata
 		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
