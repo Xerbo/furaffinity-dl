@@ -125,6 +125,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		description=$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f4)
 		title=$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f4)
 		title="${title%" by"*}" # Remove the " by Artist" bit
+		title="$(echo $title | tr -d "/")"
 		file_type=${image_url##*.}
 		file="$outdir/$title.$file_type"
 
