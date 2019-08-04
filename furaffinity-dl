@@ -28,6 +28,8 @@ Arguments:
  -p (P)lain file without any additional metadata
  -r Don't (R)ename files, just give them the same
     filename as on facdn
+ -n (N)unmber of images to download, starting from
+    the most recent submission
 
 Examples:
  $0 gallery/mylafox
@@ -122,12 +124,12 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 			echo "WARNING: $page seems to be inaccessible, skipping."
 			continue
 		fi
-	
+
 		# Get the full size image URL.
 		# This will be a facdn.net link, we will default to HTTPS
 		# but this can be disabled with -i or --http for specific reasons
 		image_url=$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
-		
+
 		# Get metadata
 		description=$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f4)
 		title=$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f4)
@@ -136,13 +138,13 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		file_type=${image_url##*.}
 		file="$outdir/$title.$file_type"
 
-		# Download the image		
+		# Download the image
 		if [ $rename = true ]; then
 			wget "$image_url" -O "$file"
 		else
 			wget "$image_url" -P "$outdir"
 		fi
-		
+
 		# Add metadata
 		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
 			# Use eyeD3 for injecting metadata into audio files (if it's installed)
@@ -161,9 +163,9 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 			fi
 		fi
 
-        #If there is a file download limit then keep track of it
+        # If there is a file download limit then keep track of it
         if [ "$maxsavefiles" -ne "0" ]; then
-            download_count=$((download_count + 1))
+            download_count="$((download_count + 1))"
 
             if [ "$download_count" -ge "$maxsavefiles" ]; then
                 echo "Reached set file download limit."
