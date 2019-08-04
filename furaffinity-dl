@@ -51,13 +51,15 @@ outdir="."
 prefix="https:"
 metadata=true
 rename=true
-while getopts 'o:c:iphr' flag; do
+maxsavefiles="0"
+while getopts 'o:c:iphrn:' flag; do
    case "${flag}" in
       o) outdir=${OPTARG};;
       c) cookiefile=${OPTARG};;
       i) prefix="http:";;
       p) metadata=false;;
 	  r) rename=false;;
+      n) maxsavefiles=${OPTARG};;
       h) help;;
       *) help;;
    esac
@@ -87,6 +89,7 @@ else
 fi
 
 url="https://www.furaffinity.net/${@: -1}"
+download_count="0"
 
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
@@ -157,6 +160,16 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 				exiftool "$file" -description="$description" -title="$title" -overwrite_original
 			fi
 		fi
+
+        #If there is a file download limit then keep track of it
+        if [ "$maxsavefiles" -ne "0" ]; then
+            download_count=$((download_count + 1))
+
+            if [ "$download_count" -ge "$maxsavefiles" ]; then
+                echo "Reached set file download limit."
+                exit 0
+            fi
+        fi
 	done
 
 	[ -z "$next_page_url" ] && break
