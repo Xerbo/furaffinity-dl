@@ -3,13 +3,13 @@ set -e
 
 # Detect installed metadata injectors
 eyed3=true
-if [ -z $(command -v eyeD3) ]; then
+if [ -z "$(command -v eyeD3)" ]; then
 	eyed3=false
 	echo "INFO: eyed3 is not installed, no metadata will be injected into music files."
 fi
 
 exiftool=true
-if [ -z $(command -v exiftool) ]; then
+if [ -z "$(command -v exiftool)" ]; then
 	exiftool=false
 	echo "INFO: exiftool is not installed, no metadata will be injected into pictures."
 fi
@@ -115,10 +115,10 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 	next_page_url="$(grep '<a class="button-link right" href="' "$tempfile" | grep '">Next &nbsp;&#x276f;&#x276f;</a>' | cut -d '"' -f 4 | sort -u)"
 
 	# Extract links to pages with individual artworks and iterate over them
-	artwork_pages=$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)
+	artwork_pages="$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)"
 	for page in $artwork_pages; do
 		# Download the submission page
-		fwget -O "$tempfile" 'https://www.furaffinity.net'"$page"
+		fwget -O "$tempfile" "https://www.furaffinity.net$page"
 
 		if grep -q "System Message" "$tempfile"; then
 			echo "WARNING: $page seems to be inaccessible, skipping."
@@ -128,22 +128,25 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		# Get the full size image URL.
 		# This will be a facdn.net link, we will default to HTTPS
 		# but this can be disabled with -i or --http for specific reasons
-		image_url=$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)
+		image_url="$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)"
 
 		# Get metadata
-		description=$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f4)
-		title=$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f4)
+		description="$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f 4)"
+		title="$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f 4)"
 		title="${title%" by"*}" # Remove the " by Artist" bit
 		title="$(echo $title | tr -d "/")"
-		file_type=${image_url##*.}
-		file="$outdir/$title.$file_type"
+		file_type="${image_url##*.}"
+		file_name="$(echo $image_url | cut -d "/" -f 7)"
+
+		# Choose the output path
+		if [ $rename = true ]; then
+			file="$outdir/$title.$file_type"
+		else
+			file="$outdir/$file_name"
+		fi
 
 		# Download the image
-		if [ $rename = true ]; then
-			wget "$image_url" -O "$file"
-		else
-			wget "$image_url" -P "$outdir"
-		fi
+		wget "$image_url" -O "$file"
 
 		# Add metadata
 		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
@@ -163,15 +166,15 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 			fi
 		fi
 
-        # If there is a file download limit then keep track of it
-        if [ "$maxsavefiles" -ne "0" ]; then
-            download_count="$((download_count + 1))"
+		# If there is a file download limit then keep track of it
+		if [ "$maxsavefiles" -ne "0" ]; then
+			download_count="$((download_count + 1))"
 
-            if [ "$download_count" -ge "$maxsavefiles" ]; then
-                echo "Reached set file download limit."
-                exit 0
-            fi
-        fi
+			if [ "$download_count" -ge "$maxsavefiles" ]; then
+				echo "Reached set file download limit."
+				exit 0
+			fi
+		fi
 	done
 
 	[ -z "$next_page_url" ] && break
