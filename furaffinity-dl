@@ -30,6 +30,7 @@ Arguments:
     filename as on facdn
  -n (N)unmber of images to download, starting from
     the most recent submission
+ -w Over(Write) files if they already exist
 
 Examples:
  $0 gallery/mylafox
@@ -54,17 +55,19 @@ prefix="https:"
 metadata=true
 rename=true
 maxsavefiles="0"
+overwrite=false
 while getopts 'o:c:iphrn:' flag; do
-   case "${flag}" in
-      o) outdir=${OPTARG};;
-      c) cookiefile=${OPTARG};;
-      i) prefix="http:";;
-      p) metadata=false;;
-	  r) rename=false;;
-      n) maxsavefiles=${OPTARG};;
-      h) help;;
-      *) help;;
-   esac
+	case "${flag}" in
+		w) overwrite=true;;
+		o) outdir=${OPTARG};;
+		c) cookiefile=${OPTARG};;
+		i) prefix="http:";;
+		p) metadata=false;;
+		r) rename=false;;
+		n) maxsavefiles=${OPTARG};;
+		h) help;;
+		*) help;;
+	esac
 done
 
 # Attempt to create the output directory
@@ -146,7 +149,11 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		fi
 
 		# Download the image
-		wget "$image_url" -O "$file"
+		if [ ! -f "$file" ] || [ $overwrite = true ] ; then
+			wget "$image_url" -O "$file"
+		else
+			echo "File already exists, skipping. Use -w to skip this check"
+		fi
 
 		# Add metadata
 		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then

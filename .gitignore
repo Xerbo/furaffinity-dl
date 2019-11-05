@@ -1,2 +1,18 @@
-
+# Pictures
+*.jpg
+*.png
+*.bmp
+*.gif
+# Audio
+*.mp3
+*.wav
+*.wmv
+# Flash
+*.swf
+# Documents
+*.txt
+*.pdf
+*.doc
+*.docx
+# Swap files
 *.swp
