@@ -56,7 +56,7 @@ metadata=true
 rename=true
 maxsavefiles="0"
 overwrite=false
-while getopts 'o:c:iphrn:' flag; do
+while getopts 'o:c:iphrnw:' flag; do
 	case "${flag}" in
 		w) overwrite=true;;
 		o) outdir=${OPTARG};;
@@ -139,7 +139,10 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		title="${title%" by"*}" # Remove the " by Artist" bit
 		title="$(echo $title | tr -d "/")"
 		file_type="${image_url##*.}"
-		file_name="$(echo $image_url | cut -d "/" -f 7)"
+		file_name="$(echo "$image_url" | cut -d "/" -f 7)"
+		if [[ "$file_name" =~ ^[0-9]{0,12}$ ]]; then
+			file_name="$(echo "$image_url" | cut -d "/" -f 8)"
+		fi
 
 		# Choose the output path
 		if [ $rename = true ]; then
