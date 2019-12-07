@@ -158,21 +158,23 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 			echo "File already exists, skipping. Use -w to skip this check"
 		fi
 
+		mime_type="$(file "$file")"
+
 		# Add metadata
-		if [ $file_type == "mp3" ] || [ $file_type == "wav" ] || [ $file_type == "wmv" ] || [ $file_type == "ogg" ] || [ $file_type == "flac" ]; then
+		if [[ $mime_type ==  *"audio"* ]]; then
 			# Use eyeD3 for injecting metadata into audio files (if it's installed)
 			if [ $eyed3 = true ] && [ $metadata = true ]; then
 				if [ -z "$description" ]; then
-					eyeD3 -t "$title" "$file"
+					eyeD3 -t "$title" "$file" || true
 				else
 					# HACK: eyeD3 throws an error if a description containing a ":"
-					eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file"
+					eyeD3 -t "$title" --add-comment "${description//:/\\:}" "$file" || true
 				fi
 			fi
-		elif [ $file_type == "jpg" ] || [ $file_type == "jpeg" ]; then
+		elif [[ $mime_type == *"image"* ]]; then
 			# Use exiftool for injecting metadata into pictures (if it's installed)
 			if [ $exiftool = true ] && [ $metadata = true ]; then
-				exiftool "$file" -description="$description" -title="$title" -overwrite_original
+				exiftool "$file" -description="$description" -title="$title" -overwrite_original || true
 			fi
 		fi
 
