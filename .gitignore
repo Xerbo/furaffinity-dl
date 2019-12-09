@@ -3,6 +3,8 @@
 *.png
 *.bmp
 *.gif
+# Meta
+*.meta
 # Audio
 *.mp3
 *.wav

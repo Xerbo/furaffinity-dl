@@ -31,6 +31,8 @@ Arguments:
  -n (N)unmber of images to download, starting from
     the most recent submission
  -w Over(Write) files if they already exist
+ -s (S)eperate metadata files, to make sure all
+    metadata is downloaded regardless of file
 
 Examples:
  $0 gallery/mylafox
@@ -56,7 +58,8 @@ metadata=true
 rename=true
 maxsavefiles="0"
 overwrite=false
-while getopts 'o:c:iphrnw:' flag; do
+textmeta=false
+while getopts 'o:c:n:iphrws' flag; do
 	case "${flag}" in
 		w) overwrite=true;;
 		o) outdir=${OPTARG};;
@@ -66,6 +69,7 @@ while getopts 'o:c:iphrnw:' flag; do
 		r) rename=false;;
 		n) maxsavefiles=${OPTARG};;
 		h) help;;
+		s) textmeta=true;;
 		*) help;;
 	esac
 done
@@ -159,6 +163,10 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		fi
 
 		mime_type="$(file "$file")"
+
+		if [ $textmeta = true ]; then
+			 echo -ne "Title: $title\nURL: $page\nFilename: $file_name\nDescription: $description" > "$file.meta"
+		fi
 
 		# Add metadata
 		if [[ $mime_type ==  *"audio"* ]]; then
