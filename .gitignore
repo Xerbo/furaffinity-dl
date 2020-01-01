@@ -18,3 +18,5 @@
 *.docx
 # Swap files
 *.swp
+# Cookies
+cookies.txt
