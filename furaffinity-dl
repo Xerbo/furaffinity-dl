@@ -119,7 +119,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 	fi
 
 	# Get URL for next page out of "Next" button. Required for favorites, pages of which are not numbered
-	next_page_url="$(grep '<a class="button-link right" href="' "$tempfile" | grep '">Next &nbsp;&#x276f;&#x276f;</a>' | cut -d '"' -f 4 | sort -u)"
+	next_page_url="$(grep -B 1 'type="submit">Next' "$tempfile" | grep form | cut -d '"' -f 2 | uniq)"
 
 	# Extract links to pages with individual artworks and iterate over them
 	artwork_pages="$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)"
