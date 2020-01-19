@@ -139,9 +139,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 
 		# Get metadata
 		description="$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f 4)"
-		title="$(grep 'og:title" content="' "$tempfile" | cut -d '"' -f 4)"
-		title="${title%" by"*}" # Remove the " by Artist" bit
-		title="$(echo $title | tr -d "/")"
+		title="$(grep -Eo '<h2><p>.*</p></h2>' "$tempfile" | awk -F "<p>" '{print $2}' | awk -F "</p>" '{print $1}')"
 		file_type="${image_url##*.}"
 		file_name="$(echo "$image_url" | cut -d "/" -f 7)"
 		if [[ "$file_name" =~ ^[0-9]{0,12}$ ]]; then
@@ -150,7 +148,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 
 		# Choose the output path
 		if [ $rename = true ]; then
-			file="$outdir/$title.$file_type"
+			file="$outdir/$(echo "$title" | sed -e 's/[^A-Za-z0-9._-]/ /g').$file_type"
 		else
 			file="$outdir/$file_name"
 		fi
