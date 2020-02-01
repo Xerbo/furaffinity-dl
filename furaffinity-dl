@@ -127,7 +127,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 	else
 		next_page_url="$(grep -B 1 'type="submit">Next' "$tempfile" | grep form | cut -d '"' -f 2 | uniq)"
 	fi
-	
+
 	# Extract links to pages with individual artworks and iterate over them
 	artwork_pages="$(grep '<a href="/view/' "$tempfile" | grep -E --only-matching '/view/[[:digit:]]+/' | uniq)"
 	for page in $artwork_pages; do
@@ -150,7 +150,12 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 
 		# Get metadata
 		description="$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f 4)"
-		title="$(grep -Eo '<h2><p>.*</p></h2>' "$tempfile" | awk -F "<p>" '{print $2}' | awk -F "</p>" '{print $1}')"
+		if [ $classic = true ]; then
+			title="$(grep -Eo '<h2>.*</h2>' "$tempfile" | awk -F "<h2>" '{print $2}' | awk -F "</h2>" '{print $1}')"
+		else
+			title="$(grep -Eo '<h2><p>.*</p></h2>' "$tempfile" | awk -F "<p>" '{print $2}' | awk -F "</p>" '{print $1}')"
+		fi
+		
 		file_type="${image_url##*.}"
 		file_name="$(echo "$image_url" | cut -d "/" -f 7)"
 		if [[ "$file_name" =~ ^[0-9]{0,12}$ ]]; then
@@ -159,6 +164,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 
 		# Choose the output path
 		if [ $rename = true ]; then
+			# FIXME titles that are just a single emoji get changed to " " and overwrite eachother
 			file="$outdir/$(echo "$title" | sed -e 's/[^A-Za-z0-9._-]/ /g').$file_type"
 		else
 			file="$outdir/$file_name"
