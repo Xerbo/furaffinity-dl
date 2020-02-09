@@ -1,18 +1,16 @@
 #!/bin/bash
+# shellcheck disable=SC2001
 set -e
 
-# Detect installed metadata injectors
-eyed3=true
-if [ -z "$(command -v eyeD3)" ]; then
-	eyed3=false
-	echo "INFO: eyed3 is not installed, no metadata will be injected into music files."
-fi
-
-exiftool=true
-if [ -z "$(command -v exiftool)" ]; then
-	exiftool=false
-	echo "INFO: exiftool is not installed, no metadata will be injected into pictures."
-fi
+# Default options
+outdir="."
+prefix="https:"
+metadata=true
+rename=true
+maxsavefiles="0"
+overwrite=false
+textmeta=false
+classic=false
 
 # Helper functions
 help() {
@@ -46,21 +44,11 @@ You can also log in to FurAffinity to download restricted content, like this:
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them."
 	exit 1
 }
-cleanup() {
-	rm -r "$tempfile"
-}
 
-# Arguments
+# Display help if no arguments given
 [[ $# -eq 0 ]] && help
 
-outdir="."
-prefix="https:"
-metadata=true
-rename=true
-maxsavefiles="0"
-overwrite=false
-textmeta=false
-classic=false
+# Options via arguments
 while getopts 'o:c:n:iphrwst' flag; do
 	case "${flag}" in
 		t) classic=true;;
@@ -77,13 +65,28 @@ while getopts 'o:c:n:iphrwst' flag; do
 	esac
 done
 
+# Detect installed metadata injectors
+eyed3=true
+if [ -z "$(command -v eyeD3)" ]; then
+	eyed3=false
+	echo "INFO: eyed3 is not installed, no metadata will be injected into music files."
+fi
+
+exiftool=true
+if [ -z "$(command -v exiftool)" ]; then
+	exiftool=false
+	echo "INFO: exiftool is not installed, no metadata will be injected into pictures."
+fi
+
+cleanup() {
+	rm "$tempfile"
+}
+
 # Attempt to create the output directory
 mkdir -p "$outdir"
 
-# Setup runtime directory
-runtime_dir="$HOME"'/.cache/furaffinity-dl'
-mkdir -p "$runtime_dir"
-tempfile="$(umask u=rwx,g=,o= && mktemp $runtime_dir/fa-dl.XXXXXXXXXX)"
+# Setup temporarily file with 600 perms
+tempfile="$(umask u=rwx,g=,o= && mktemp --suffix=_fa-dl)"
 
 # Call cleanup function on exit
 trap cleanup EXIT
@@ -91,16 +94,16 @@ trap cleanup EXIT
 if [ -z "$cookiefile" ]; then
 	# Set wget with a custom user agent
 	fwget() {
-		wget -nv --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Xerbo/furaffinity-dl)" $*
+		wget --quiet --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Xerbo/furaffinity-dl)" "$@"
 	}
 else
 	# Set wget with a custom user agent and cookies
 	fwget() {
-		wget -nv --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Xerbo/furaffinity-dl)" --load-cookies "$cookiefile" $*
+		wget --quiet --user-agent="Mozilla/5.0 furaffinity-dl (https://github.com/Xerbo/furaffinity-dl)" --load-cookies "$cookiefile" "$@"
 	}
 fi
 
-url="https://www.furaffinity.net/${@: -1}"
+url="https://www.furaffinity.net/${*: -1}"
 download_count="0"
 
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
@@ -125,7 +128,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 	if [ $classic = true ]; then
 		next_page_url="$(grep '<a class="button-link right" href="' "$tempfile" | grep '">Next &nbsp;&#x276f;&#x276f;</a>' | cut -d '"' -f 4 | sort -u)"
 	else
-		next_page_url="$(grep -B 1 'type="submit">Next' "$tempfile" | grep form | cut -d '"' -f 2 | uniq)"
+		next_page_url="$(grep -B 1 --max-count=1 'type="submit">Next' "$tempfile" | grep form | cut -d '"' -f 2)"
 	fi
 
 	# Extract links to pages with individual artworks and iterate over them
@@ -168,7 +171,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 
 		# Download the image
 		if [ ! -f "$file" ] || [ $overwrite = true ] ; then
-			wget "$image_url" -O "$file"
+			wget --quiet --show-progress "$image_url" -O "$file"
 		else
 			echo "File already exists, skipping. Use -w to skip this check"
 		fi
