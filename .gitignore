@@ -1,22 +1,7 @@
-# Pictures
-*.jpg
-*.png
-*.bmp
-*.gif
-# Meta
-*.meta
-# Audio
-*.mp3
-*.wav
-*.wmv
-# Flash
-*.swf
-# Documents
-*.txt
-*.pdf
-*.doc
-*.docx
-# Swap files
-*.swp
-# Cookies
+# My cookies, committing them to a public repo would not be a good idea
 cookies.txt
+
+# Downloaded types
+*.png
+*.jpg
+*.json
