@@ -1,3 +1,5 @@
+Python rewrite has been released, I would appreciate it if some people would try it out. It lives on the `python` branch
+
 # FurAffinity Downloader
 **furaffinity-dl** is a bash script for batch downloading of galleries and favorites from furaffinity.net users.
 It was written for preservation of culture, to counter the people nuking their galleries every once a while.
