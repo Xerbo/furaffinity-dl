@@ -40,6 +40,7 @@ parser.add_argument('username', metavar='username', type=str, nargs='?',
                     help='username of the furaffinity user')
 parser.add_argument('-o', metavar='output', dest='output', type=str, default='.', help="output directory")
 parser.add_argument('-c', metavar='cookies', dest='cookies', type=str, default='', help="path to a NetScape cookies file")
+parser.add_argument('-u', metavar='useragent', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browsers useragent, may be required, depending on your luck")
 parser.add_argument('-s', metavar='start', dest='start', type=int, default=1, help="page number to start from")
 
 args = parser.parse_args()
@@ -62,7 +63,7 @@ if bool(re.compile(r'[^a-zA-Z0-9\-~._]').search(args.username)):
     
 # Initialise a session
 session = requests.Session()
-session.headers.update({'User-Agent': 'furaffinity-dl redevelopment'})
+session.headers.update({'User-Agent': args.ua})
 
 # Load cookies from a netscape cookie file (if provided)
 if args.cookies != '':
@@ -130,7 +131,7 @@ def download_file(path):
 
     # Because for some god forsaken reason FA keeps the original filename in the upload, in the case that it contains non-ASCII
     # characters it can make this thing blow up. So we have to do some annoying IRI stuff to make it work. Maybe consider `requests`
-    # instead of urllib
+    # instead of `urllib`
     def strip_non_ascii(s): return ''.join(i for i in s if ord(i) < 128)
     url = 'https:{}'.format(image)
     url = urllib.parse.urlsplit(url)

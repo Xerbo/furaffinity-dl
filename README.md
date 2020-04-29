@@ -30,9 +30,9 @@ All files from the given section and user will be downloaded to the current dire
 
 For a full list of command line arguments use `./furaffinity-dl -h`.
 
-You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome base browsers](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)), you can then pass them to the script with the `-c` flag, like this:
+You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome base browsers](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)), you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user-agent):
 
- `python3 furaffinity-dl.py -c cookies.txt gallery letodoesart`
+ `python3 furaffinity-dl.py -c cookies.txt -u 'Mozilla/5.0 ....' gallery letodoesart`
 
 ## TODO
 
