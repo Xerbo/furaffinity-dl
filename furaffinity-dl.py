@@ -16,10 +16,9 @@ Please refer to LICENSE for licensing conditions.
 current ideas / things to do:
  -r replenish, keep downloading until it finds a already downloaded file
  -n number of posts to download
- file renaming to title
  metadata injection (gets messy easily)
  sqlite database
- support for beta theme
+ support for classic theme
  using `requests` instead of `urllib`
  turn this into a module
 '''
@@ -44,7 +43,7 @@ parser.add_argument('-u', metavar='useragent', dest='ua', type=str, default='Moz
 parser.add_argument('-s', metavar='start', dest='start', type=int, default=1, help="page number to start from")
 
 args = parser.parse_args()
-if args.username == None:
+if args.username is None:
     parser.print_help()
     exit()
 
@@ -54,13 +53,13 @@ if args.output != '.':
 
 # Check validity of category
 valid_categories = ['gallery', 'favorites', 'scraps']
-if not args.category in valid_categories:
+if args.category not in valid_categories:
     raise Exception('Category is not valid', args.category)
 
 # Check validity of username
 if bool(re.compile(r'[^a-zA-Z0-9\-~._]').search(args.username)):
     raise Exception('Username contains non-valid characters', args.username)
-    
+
 # Initialise a session
 session = requests.Session()
 session.headers.update({'User-Agent': args.ua})
@@ -72,8 +71,9 @@ if args.cookies != '':
     session.cookies = cookies
 
 base_url = 'https://www.furaffinity.net'
-gallery_url = '{}/gallery/{}'.format(base_url, args.username)
+gallery_url = '{}/{}/{}'.format(base_url, args.category, args.username)
 page_num = args.start
+
 
 # The cursed function that handles downloading
 def download_file(path):
@@ -82,7 +82,7 @@ def download_file(path):
     s = BeautifulSoup(response.text, 'html.parser')
 
     image = s.find(class_='download').find('a').attrs.get('href')
-    title = s.find(class_='submission-title').find('p').contents[0];
+    title = s.find(class_='submission-title').find('p').contents[0]
     filename = image.split("/")[-1:][0]
     data = {
         'id': int(path.split('/')[-2:-1][0]),
@@ -109,10 +109,10 @@ def download_file(path):
     # Extract comments
     for comment in s.findAll(class_='comment_container'):
         temp_ele = comment.find(class_='comment-parent')
-        parent_cid = None if temp_ele == None else int(temp_ele.attrs.get('href')[5:])
+        parent_cid = None if temp_ele is None else int(temp_ele.attrs.get('href')[5:])
 
         # Comment deleted or hidden
-        if comment.find(class_='comment-link') == None:
+        if comment.find(class_='comment-link') is None:
             continue
 
         data['comments'].append({
@@ -122,10 +122,6 @@ def download_file(path):
             'username': comment.find(class_='comment_username').text,
             'date': comment.find(class_='popup_date').attrs.get('title')
         })
-
-    # Write a UTF-8 encoded JSON file for metadata
-    with open(os.path.join(args.output, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
 
     print('Downloading "{}"... '.format(title))
 
@@ -138,7 +134,15 @@ def download_file(path):
     url = list(url)
     url[2] = urllib.parse.quote(url[2])
     url = urllib.parse.urlunsplit(url)
-    urllib.request.urlretrieve(url, os.path.join(args.output, strip_non_ascii(filename)))
+    try:
+        urllib.request.urlretrieve(url, os.path.join(args.output, strip_non_ascii(filename)))
+    except urllib.error.HTTPError:
+        print("404 Not Found, skipping")
+
+    # Write a UTF-8 encoded JSON file for metadata
+    with open(os.path.join(args.output, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
 
 # Main downloading loop
 while True:
@@ -148,23 +152,23 @@ while True:
 
     # Account status
     if page_num == 1:
-        if s.find(class_='loggedin_user_avatar') != None:
+        if s.find(class_='loggedin_user_avatar') is not None:
             account_username = s.find(class_='loggedin_user_avatar').attrs.get('alt')
             print('Logged in as', account_username)
         else:
             print('Not logged in, some users gallery\'s may be unaccessible and NSFW content is not downloadable')
 
     # System messages
-    if s.find(class_='notice-message') != None:
+    if s.find(class_='notice-message') is not None:
         message = s.find(class_='notice-message').find('div')
         for ele in message:
-            if ele.name != None:
+            if ele.name is not None:
                 ele.decompose()
-        
+
         raise Exception('System Message', message.text.strip())
 
     # End of gallery
-    if s.find(id='no-images') != None:
+    if s.find(id='no-images') is not None:
         print('End of gallery')
         break
 
