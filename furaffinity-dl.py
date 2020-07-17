@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 import argparse
+from tqdm import tqdm
 from argparse import RawTextHelpFormatter
 import json
 from bs4 import BeautifulSoup
 import requests
-import urllib.request
 import http.cookiejar as cookielib
-import urllib.parse
 import re
 import os
 
@@ -19,7 +18,6 @@ current ideas / things to do:
  metadata injection (gets messy easily)
  sqlite database
  support for classic theme
- using `requests` instead of `urllib`
  turn this into a module
 '''
 
@@ -61,7 +59,7 @@ if bool(re.compile(r'[^a-zA-Z0-9\-~._]').search(args.username)):
     raise Exception('Username contains non-valid characters', args.username)
 
 # Initialise a session
-session = requests.Session()
+session = requests.session()
 session.headers.update({'User-Agent': args.ua})
 
 # Load cookies from a netscape cookie file (if provided)
@@ -74,9 +72,28 @@ base_url = 'https://www.furaffinity.net'
 gallery_url = '{}/{}/{}'.format(base_url, args.category, args.username)
 page_num = args.start
 
+def download_file(url, fname, desc):
+    r = session.get(url, stream=True)
+    if r.status_code != 200:
+        print("Got a HTTP {} while downloading; skipping".format(r.status_code))
+        return False
+    
+    total = int(r.headers.get('Content-Length', 0))
+    with open(fname, 'wb') as file, tqdm(
+        desc=desc.ljust(40)[:40],
+        total=total,
+        miniters=100,
+        unit='b',
+        unit_scale=True,
+        unit_divisor=1024
+    ) as bar:
+        for data in r.iter_content(chunk_size=1024):
+            size = file.write(data)
+            bar.update(size)
+    return True
 
 # The cursed function that handles downloading
-def download_file(path):
+def download(path):
     page_url = '{}{}'.format(base_url, path)
     response = session.get(page_url)
     s = BeautifulSoup(response.text, 'html.parser')
@@ -111,7 +128,7 @@ def download_file(path):
         temp_ele = comment.find(class_='comment-parent')
         parent_cid = None if temp_ele is None else int(temp_ele.attrs.get('href')[5:])
 
-        # Comment deleted or hidden
+        # Comment is deleted or hidden
         if comment.find(class_='comment-link') is None:
             continue
 
@@ -123,21 +140,11 @@ def download_file(path):
             'date': comment.find(class_='popup_date').attrs.get('title')
         })
 
-    print('Downloading "{}"... '.format(title))
-
-    # Because for some god forsaken reason FA keeps the original filename in the upload, in the case that it contains non-ASCII
-    # characters it can make this thing blow up. So we have to do some annoying IRI stuff to make it work. Maybe consider `requests`
-    # instead of `urllib`
-    def strip_non_ascii(s): return ''.join(i for i in s if ord(i) < 128)
-    url = 'https:{}'.format(image)
-    url = urllib.parse.urlsplit(url)
-    url = list(url)
-    url[2] = urllib.parse.quote(url[2])
-    url = urllib.parse.urlunsplit(url)
-    try:
-        urllib.request.urlretrieve(url, os.path.join(args.output, strip_non_ascii(filename)))
-    except urllib.error.HTTPError:
-        print("404 Not Found, skipping")
+    url ='https:{}'.format(image)
+    output_path = os.path.join(args.output, filename)
+    
+    if not download_file(url, output_path, data["title"]):
+        return False
 
     # Write a UTF-8 encoded JSON file for metadata
     with open(os.path.join(args.output, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
@@ -156,7 +163,7 @@ while True:
             account_username = s.find(class_='loggedin_user_avatar').attrs.get('alt')
             print('Logged in as', account_username)
         else:
-            print('Not logged in, some users gallery\'s may be unaccessible and NSFW content is not downloadable')
+            print('Not logged in, NSFW content is unaccessible')
 
     # System messages
     if s.find(class_='notice-message') is not None:
@@ -174,7 +181,7 @@ while True:
 
     # Download all images on the page
     for img in s.findAll('figure'):
-        download_file(img.find('a').attrs.get('href'))
+        download(img.find('a').attrs.get('href'))
 
     page_num += 1
     print('Downloading page', page_num)
