@@ -183,7 +183,18 @@ while True:
     for img in s.findAll('figure'):
         download(img.find('a').attrs.get('href'))
 
-    page_num += 1
+    # Favorites galleries use a weird timestamp system, so grab the next "page" from the Next button
+    if args.category == 'favorites':
+        next_button = s.find('a', class_='button standard right')
+        if next_button is None:
+            break
+
+        # URL looks something like /favorites/:username/:timestamp/next
+        # Splitting on the username is more robust to future URL changes
+        page_num = next_button.attrs['href'].split(args.username + '/')[-1]
+    else:
+        page_num += 1
+    
     print('Downloading page', page_num)
 
 print('Finished downloading')
