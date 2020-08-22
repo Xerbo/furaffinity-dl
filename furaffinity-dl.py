@@ -37,8 +37,8 @@ parser.add_argument('username', metavar='username', type=str, nargs='?',
                     help='username of the furaffinity user')
 parser.add_argument('-o', metavar='output', dest='output', type=str, default='.', help="output directory")
 parser.add_argument('-c', metavar='cookies', dest='cookies', type=str, default='', help="path to a NetScape cookies file")
-parser.add_argument('-u', metavar='useragent', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browsers useragent, may be required, depending on your luck")
-parser.add_argument('-s', metavar='start', dest='start', type=int, default=1, help="page number to start from")
+parser.add_argument('-u', metavar='useragent', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browser's useragent, may be required, depending on your luck")
+parser.add_argument('-s', metavar='start', dest='start', type=str, default=1, help="page number to start from")
 
 args = parser.parse_args()
 if args.username is None:
@@ -163,7 +163,7 @@ while True:
             account_username = s.find(class_='loggedin_user_avatar').attrs.get('alt')
             print('Logged in as', account_username)
         else:
-            print('Not logged in, NSFW content is unaccessible')
+            print('Not logged in, NSFW content is inaccessible')
 
     # System messages
     if s.find(class_='notice-message') is not None:
