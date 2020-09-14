@@ -11,34 +11,25 @@ import os
 
 '''
 Please refer to LICENSE for licensing conditions.
-
-current ideas / things to do:
- -r replenish, keep downloading until it finds a already downloaded file
- -n number of posts to download
- metadata injection (gets messy easily)
- sqlite database
- support for classic theme
- turn this into a module
 '''
 
 # Argument parsing
 parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description='Downloads the entire gallery/scraps/favorites of a furaffinity user', epilog='''
 Examples:
- python3 fadl.py gallery koul
- python3 fadl.py -o koulsArt gallery koul
- python3 fadl.py -o mylasFavs favorites mylafox\n
+ python3 furaffinity-dl.py gallery koul
+ python3 furaffinity-dl.py -o koulsArt gallery koul
+ python3 furaffinity-dl.py -o mylasFavs favorites mylafox\n
 You can also log in to FurAffinity in a web browser and load cookies to download restricted content:
- python3 fadl.py -c cookies.txt gallery letodoesart\n
+ python3 furaffinity-dl.py -c cookies.txt gallery letodoesart\n
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
 ''')
-parser.add_argument('category', metavar='category', type=str, nargs='?', default='gallery',
-                    help='the category to download, gallery/scraps/favorites')
-parser.add_argument('username', metavar='username', type=str, nargs='?',
-                    help='username of the furaffinity user')
-parser.add_argument('-o', metavar='output', dest='output', type=str, default='.', help="output directory")
-parser.add_argument('-c', metavar='cookies', dest='cookies', type=str, default='', help="path to a NetScape cookies file")
-parser.add_argument('-u', metavar='useragent', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browser's useragent, may be required, depending on your luck")
-parser.add_argument('-s', metavar='start', dest='start', type=str, default=1, help="page number to start from")
+parser.add_argument('category', metavar='category', type=str, nargs='?', default='gallery', help='the category to download, gallery/scraps/favorites')
+parser.add_argument('username', metavar='username', type=str, nargs='?', help='username of the furaffinity user')
+parser.add_argument('--output', '-o', dest='output', type=str, default='.', help="output directory")
+parser.add_argument('--cookies', '-c', dest='cookies', type=str, default='', help="path to a NetScape cookies file")
+parser.add_argument('--ua', '-u', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browser's useragent, may be required, depending on your luck")
+parser.add_argument('--start', '-s', dest='start', type=str, default=1, help="page number to start from")
+parser.add_argument('--dont-redownload', '-d', const='dont_redownload', action='store_const', help="Don't redownload files that have already been downloaded")
 
 args = parser.parse_args()
 if args.username is None:
@@ -72,12 +63,13 @@ base_url = 'https://www.furaffinity.net'
 gallery_url = '{}/{}/{}'.format(base_url, args.category, args.username)
 page_num = args.start
 
+
 def download_file(url, fname, desc):
     r = session.get(url, stream=True)
     if r.status_code != 200:
         print("Got a HTTP {} while downloading; skipping".format(r.status_code))
         return False
-    
+
     total = int(r.headers.get('Content-Length', 0))
     with open(fname, 'wb') as file, tqdm(
         desc=desc.ljust(40)[:40],
@@ -91,6 +83,7 @@ def download_file(url, fname, desc):
             size = file.write(data)
             bar.update(size)
     return True
+
 
 # The cursed function that handles downloading
 def download(path):
@@ -140,15 +133,20 @@ def download(path):
             'date': comment.find(class_='popup_date').attrs.get('title')
         })
 
-    url ='https:{}'.format(image)
+    url = 'https:{}'.format(image)
     output_path = os.path.join(args.output, filename)
-    
-    if not download_file(url, output_path, data["title"]):
-        return False
+
+    if not args.dont_redownload or not os.path.isfile(output_path):
+        if not download_file(url, output_path, data["title"]):
+            return False
+    else:
+        print('Skipping "{}", since it\'s already downloaded'.format(data["title"]))
 
     # Write a UTF-8 encoded JSON file for metadata
     with open(os.path.join(args.output, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+    return True
 
 
 # Main downloading loop
@@ -194,7 +192,8 @@ while True:
         page_num = next_button.attrs['href'].split(args.username + '/')[-1]
     else:
         page_num += 1
-    
+
     print('Downloading page', page_num)
+
 
 print('Finished downloading')

@@ -16,25 +16,37 @@ furaffinity-dl has only been tested only on Linux, however it should also work o
 
 ## Usage
 
-Run it with:
+```
+usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--dont-redownload] [category] [username]
 
-`./furaffinity-dl.py category username`
+Downloads the entire gallery/scraps/favorites of a furaffinity user
 
-or:
+positional arguments:
+  category              the category to download, gallery/scraps/favorites
+  username              username of the furaffinity user
 
-`python3 furaffinity-dl.py category username`
+optional arguments:
+  -h, --help            show this help message and exit
+  --output OUTPUT, -o OUTPUT
+                        output directory
+  --cookies COOKIES, -c COOKIES
+                        path to a NetScape cookies file
+  --ua UA, -u UA        Your browser's useragent, may be required, depending on your luck
+  --start START, -s START
+                        page number to start from
+  --dont-redownload, -d
+                        Don't redownload files that have already been downloaded
 
-All files from the given section and user will be downloaded to the current directory.
+Examples:
+ python3 furaffinity-dl.py gallery koul
+ python3 furaffinity-dl.py -o koulsArt gallery koul
+ python3 furaffinity-dl.py -o mylasFavs favorites mylafox
 
-### Examples
+You can also log in to FurAffinity in a web browser and load cookies to download restricted content:
+ python3 furaffinity-dl.py -c cookies.txt gallery letodoesart
 
-`python3 furaffinity-dl.py gallery koul`
-
-`python3 furaffinity-dl.py -o koulsArt gallery koul`
-
-`python3 furaffinity-dl.py -o mylasFavs favorites mylafox`
-
-For a full list of command line arguments use `./furaffinity-dl -h`.
+DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
+```
 
 You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome based browsers](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)), you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user agent):
 
