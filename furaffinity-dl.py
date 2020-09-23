@@ -91,6 +91,11 @@ def download(path):
     response = session.get(page_url)
     s = BeautifulSoup(response.text, 'html.parser')
 
+    # System messages
+    if s.find(class_='notice-message') is not None:
+        message = s.find(class_='notice-message').find('div').find(class_="link-override").text.strip()
+        raise Exception('System Message', message)
+
     image = s.find(class_='download').find('a').attrs.get('href')
     title = s.find(class_='submission-title').find('p').contents[0]
     filename = image.split("/")[-1:][0]
@@ -141,6 +146,7 @@ def download(path):
             return False
     else:
         print('Skipping "{}", since it\'s already downloaded'.format(data["title"]))
+        return True
 
     # Write a UTF-8 encoded JSON file for metadata
     with open(os.path.join(args.output, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
@@ -165,12 +171,8 @@ while True:
 
     # System messages
     if s.find(class_='notice-message') is not None:
-        message = s.find(class_='notice-message').find('div')
-        for ele in message:
-            if ele.name is not None:
-                ele.decompose()
-
-        raise Exception('System Message', message.text.strip())
+        message = s.find(class_='notice-message').find('div').find(class_="link-override").text.strip()
+        raise Exception('System Message', message)
 
     # End of gallery
     if s.find(id='no-images') is not None:
