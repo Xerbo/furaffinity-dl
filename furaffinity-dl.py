@@ -8,6 +8,7 @@ import requests
 import http.cookiejar as cookielib
 import re
 import os
+from time import sleep
 
 '''
 Please refer to LICENSE for licensing conditions.
@@ -30,6 +31,8 @@ parser.add_argument('--cookies', '-c', dest='cookies', type=str, default='', hel
 parser.add_argument('--ua', '-u', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browser's useragent, may be required, depending on your luck")
 parser.add_argument('--start', '-s', dest='start', type=str, default=1, help="page number to start from")
 parser.add_argument('--dont-redownload', '-d', const='dont_redownload', action='store_const', help="Don't redownload files that have already been downloaded")
+parser.add_argument('--interval', '-i', dest='interval', type=float, default=0, help="delay between downloading pages")
+
 
 args = parser.parse_args()
 if args.username is None:
@@ -182,6 +185,7 @@ while True:
     # Download all images on the page
     for img in s.findAll('figure'):
         download(img.find('a').attrs.get('href'))
+        sleep(args.interval)
 
     # Favorites galleries use a weird timestamp system, so grab the next "page" from the Next button
     if args.category == 'favorites':
