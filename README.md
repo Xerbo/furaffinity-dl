@@ -17,7 +17,7 @@ furaffinity-dl has only been tested only on Linux, however it should also work o
 ## Usage
 
 ```
-usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--dont-redownload] [--interval INTERVAL] [category] [username]
+usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--dont-redownload] [--interval INTERVAL] [--metadir METADIR] [category] [username]
 
 Downloads the entire gallery/scraps/favorites of a furaffinity user
 
@@ -38,6 +38,8 @@ optional arguments:
                         Don't redownload files that have already been downloaded
   --interval INTERVAL, -i INTERVAL
                         delay between downloading pages
+  --metadir METADIR, -m METADIR
+                        directory to put meta files in
 
 Examples:
  python3 furaffinity-dl.py gallery koul

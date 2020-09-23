@@ -32,7 +32,7 @@ parser.add_argument('--ua', '-u', dest='ua', type=str, default='Mozilla/5.0 (Win
 parser.add_argument('--start', '-s', dest='start', type=str, default=1, help="page number to start from")
 parser.add_argument('--dont-redownload', '-d', const='dont_redownload', action='store_const', help="Don't redownload files that have already been downloaded")
 parser.add_argument('--interval', '-i', dest='interval', type=float, default=0, help="delay between downloading pages")
-
+parser.add_argument('--metadir', '-m', dest='metadir', type=str, default=None, help="directory to put meta files in")
 
 args = parser.parse_args()
 if args.username is None:
@@ -42,6 +42,12 @@ if args.username is None:
 # Create output directory if it doesn't exist
 if args.output != '.':
     os.makedirs(args.output, exist_ok=True)
+    
+if args.metadir == None:
+    args.metadir = args.output
+else:
+    os.makedirs(args.metadir, exist_ok=True)
+
 
 # Check validity of category
 valid_categories = ['gallery', 'favorites', 'scraps']
@@ -152,7 +158,7 @@ def download(path):
         return True
 
     # Write a UTF-8 encoded JSON file for metadata
-    with open(os.path.join(args.output, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
+    with open(os.path.join(args.metadir, '{}.json'.format(filename)), 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
     return True
