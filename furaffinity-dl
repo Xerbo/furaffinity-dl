@@ -29,8 +29,8 @@ Arguments:
     filename as on facdn
  -n (N)umber of images to download, starting from
     the most recent submission
- -d Number of (D)uplicate files to register before
-    exiting
+ -d Number of consecutive (D)uplicate files to register 
+    before exiting
  -w Over(Write) files if they already exist
  -s (S)eperate metadata files, to make sure all
     metadata is downloaded regardless of file
@@ -183,7 +183,8 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 			echo "File already exists, skipping. Use -w to skip this check"
 			# increment the duplicate counter
 			duplicate_count="$((duplicate_count + 1))"
-			# If we've reached the max number of duplicates, should output message and exit
+			# If we've reached the max number of consecutive duplicates, 
+			# should output message and exit
 			if [ "$maxduplicatecount" -ne "0" ] && [ "$duplicate_count" -ge "$maxduplicatecount" ]; then
 				echo "Reached set maximum of consecutive duplicate files"
 				exit 0
