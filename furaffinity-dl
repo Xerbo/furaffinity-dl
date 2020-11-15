@@ -8,6 +8,7 @@ prefix="https:"
 metadata=true
 rename=true
 maxsavefiles="0"
+maxduplicatecount="0"
 overwrite=false
 textmeta=false
 classic=false
@@ -26,8 +27,10 @@ Arguments:
  -p (P)lain file without any additional metadata
  -r Don't (R)ename files, just give them the same
     filename as on facdn
- -n (N)unmber of images to download, starting from
+ -n (N)umber of images to download, starting from
     the most recent submission
+ -d Number of consecutive (D)uplicate files to register 
+    before exiting
  -w Over(Write) files if they already exist
  -s (S)eperate metadata files, to make sure all
     metadata is downloaded regardless of file
@@ -49,7 +52,7 @@ DISCLAIMER: It is your own responsibility to check whether batch downloading is 
 [[ $# -eq 0 ]] && help
 
 # Options via arguments
-while getopts 'o:c:n:iphrwst' flag; do
+while getopts 'o:c:n:d:iphrwst' flag; do
 	case "${flag}" in
 		t) classic=true;;
 		w) overwrite=true;;
@@ -59,6 +62,7 @@ while getopts 'o:c:n:iphrwst' flag; do
 		p) metadata=false;;
 		r) rename=false;;
 		n) maxsavefiles=${OPTARG};;
+		d) maxduplicatecount=${OPTARG};;
 		h) help;;
 		s) textmeta=true;;
 		*) help;;
@@ -105,6 +109,7 @@ fi
 
 url="https://www.furaffinity.net/${*: -1}"
 download_count="0"
+duplicate_count="0"
 
 # Iterate over the gallery pages with thumbnails and links to artwork view pages
 while true; do
@@ -172,8 +177,18 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		# Download the image
 		if [ ! -f "$file" ] || [ $overwrite = true ] ; then
 			wget --quiet --show-progress "$image_url" -O "$file"
+			# reset the duplicate counter, another non-duplicate file has been found
+			duplicate_count=0
 		else
 			echo "File already exists, skipping. Use -w to skip this check"
+			# increment the duplicate counter
+			duplicate_count="$((duplicate_count + 1))"
+			# If we've reached the max number of consecutive duplicates, 
+			# should output message and exit
+			if [ "$maxduplicatecount" -ne "0" ] && [ "$duplicate_count" -ge "$maxduplicatecount" ]; then
+				echo "Reached set maximum of consecutive duplicate files"
+				exit 0
+			fi
 		fi
 
 		mime_type="$(file -- "$file")"
