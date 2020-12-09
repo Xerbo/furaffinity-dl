@@ -26,6 +26,7 @@ DISCLAIMER: It is your own responsibility to check whether batch downloading is 
 ''')
 parser.add_argument('category', metavar='category', type=str, nargs='?', default='gallery', help='the category to download, gallery/scraps/favorites')
 parser.add_argument('username', metavar='username', type=str, nargs='?', help='username of the furaffinity user')
+parser.add_argument('folder', metavar='folder', type=str, nargs='?', help='name of the folder')
 parser.add_argument('--output', '-o', dest='output', type=str, default='.', help="output directory")
 parser.add_argument('--cookies', '-c', dest='cookies', type=str, default='', help="path to a NetScape cookies file")
 parser.add_argument('--ua', '-u', dest='ua', type=str, default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.7) Gecko/20100101 Firefox/68.7', help="Your browser's useragent, may be required, depending on your luck")
@@ -70,6 +71,9 @@ if args.cookies != '':
 
 base_url = 'https://www.furaffinity.net'
 gallery_url = '{}/{}/{}'.format(base_url, args.category, args.username)
+if args.folder is not None:
+    gallery_url += "/folder/"
+    gallery_url += args.folder
 page_num = args.start
 
 
