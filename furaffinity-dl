@@ -150,7 +150,7 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		# Get the full size image URL.
 		# This will be a facdn.net link, we will default to HTTPS
 		# but this can be disabled with -i or --http for specific reasons
-		image_url="$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/.\+">Download' "$tempfile" | cut -d '"' -f 2)" 
+		image_url="$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/[^"]\+">Download' "$tempfile" | cut -d '"' -f 2)" 
 
 		# Get metadata
 		description="$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f 4)"
