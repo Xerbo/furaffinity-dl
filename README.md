@@ -14,7 +14,7 @@ Windows users can get it to work via Microsoft's [WSL](https://docs.microsoft.co
 
 ## Usage
 Make it executable with
- `chmod +x faraffinity-dl`
+ `chmod +x furaffinity-dl`
 And then run it with
  `./furaffinity-dl section/username`
 
