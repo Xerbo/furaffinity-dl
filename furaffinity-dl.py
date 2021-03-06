@@ -197,15 +197,14 @@ while True:
         download(img.find('a').attrs.get('href'))
         sleep(args.interval)
 
-    next_button = s.find('a', class_='button standard right')
+    next_button = s.find('button', class_='button standard', text="Next").parent
     if next_button is None:
+        print('Unable to find next button')
         break
 
-    # URL looks something like /favorites/:username/:timestamp/next
-    # Splitting on the username is more robust to future URL changes
-    page_num = next_button.attrs['href'].split(args.username + '/')[-1]
+    page_num = next_button.attrs['action'].split('/')[-2]
 
-    print('Downloading page', page_num)
+    print('Downloading page', page_num, page_url)
 
 
 print('Finished downloading')
