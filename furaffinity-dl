@@ -26,7 +26,7 @@ Arguments:
     you can provide a path to a (C)ookie file
  -p (P)lain file without any additional metadata
  -r Don't (R)ename files, just give them the same
-    filename as on facdn
+    filename as on d.furaffinity.net
  -n (N)umber of images to download, starting from
     the most recent submission
  -d Number of consecutive (D)uplicate files to register 
@@ -148,9 +148,9 @@ https://github.com/Xerbo/furaffinity-dl/issues" >&2
 		fi
 
 		# Get the full size image URL.
-		# This will be a facdn.net link, we will default to HTTPS
+		# This will be a d.furaffinity.net link, we will default to HTTPS
 		# but this can be disabled with -i or --http for specific reasons
-		image_url="$prefix$(grep --only-matching --max-count=1 ' href="//d.facdn.net/art/[^"]\+">Download' "$tempfile" | cut -d '"' -f 2)" 
+		image_url="$prefix$(grep --only-matching --max-count=1 ' href="//d.furaffinity.net/art/[^"]\+">Download' "$tempfile" | cut -d '"' -f 2)" 
 
 		# Get metadata
 		description="$(grep 'og:description" content="' "$tempfile" | cut -d '"' -f 4)"
