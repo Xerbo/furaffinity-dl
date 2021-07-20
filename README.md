@@ -16,14 +16,18 @@ furaffinity-dl has only been tested only on Linux, however it should also work o
 
 ## Usage
 
+When downloading a folder make sure to put everything after **/folder/**, for example 123456/Folder-Name-Here instead of just 123456 (ref [#60](https://github.com/Xerbo/furaffinity-dl/issues/60)).
+
 ```
-usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--dont-redownload] [--interval INTERVAL] [--metadir METADIR] [category] [username]
+usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--dont-redownload] [--interval INTERVAL] [--metadir METADIR]
+                         [category] [username] [folder]
 
 Downloads the entire gallery/scraps/favorites of a furaffinity user
 
 positional arguments:
   category              the category to download, gallery/scraps/favorites
   username              username of the furaffinity user
+  folder                name of the folder (full path, for instance 123456/Folder-Name-Here)
 
 optional arguments:
   -h, --help            show this help message and exit
