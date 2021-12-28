@@ -197,14 +197,37 @@ while True:
         download(img.find('a').attrs.get('href'))
         sleep(args.interval)
 
-    next_button = s.find('button', class_='button standard', text="Next").parent
-    if next_button is None:
-        print('Unable to find next button')
-        break
+    if args.category != "favorites":
+        next_button = s.find('button', class_='button standard', text="Next").parent
+        if next_button is None:
+            print('Unable to find next button')
+            break
 
-    page_num = next_button.attrs['action'].split('/')[-2]
+        page_num = next_button.attrs['action'].split('/')[-2]
 
-    print('Downloading page', page_num, page_url)
+        print('Downloading page', page_num, page_url)
+    else:
+        next_button = s.find('a', class_='button mobile-button right', text="Next")
+        if next_button is None:
+            print('Unable to find next button')
+            break
+
+        # unlike galleries that are sequentially numbered, favorites use a different scheme.
+        # the "page_num" is instead: [set of numbers]/next (the trailing /next is required)
+        
+        next_page_link = next_button.attrs['href']
+        next_fav_num = re.search(r'\d+', next_page_link)
+
+        if next_fav_num == None:
+            print('Failed to parse next favorite link.')
+            break
+
+        page_num = next_fav_num.group(0) + "/next"
+
+        # parse it into numbers/next
+
+
+        print('Downloading page', page_num, page_url)
 
 
 print('Finished downloading')
