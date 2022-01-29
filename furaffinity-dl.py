@@ -203,12 +203,12 @@ while True:
         sleep(args.interval)
 
     if args.category != "favorites":
-        next_button = s.find('button', class_='button standard', text="Next").parent
-        if next_button is None:
+        next_button = s.find('button', class_='button standard', text="Next")
+        if next_button is None or next_button.parent is None:
             print('Unable to find next button')
             break
 
-        page_num = next_button.attrs['action'].split('/')[-2]
+        page_num = next_button.parent.attrs['action'].split('/')[-2]
 
         print('Downloading page', page_num, page_url)
     else:
