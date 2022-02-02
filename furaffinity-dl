@@ -90,7 +90,7 @@ cleanup() {
 mkdir -p -- "$outdir"
 
 # Setup temporarily file with 600 perms
-tempfile="$(umask u=rwx,g=,o= && mktemp --suffix=_fa-dl)"
+tempfile="$(umask u=rwx,g=,o= && mktemp)"
 
 # Call cleanup function on exit
 trap cleanup EXIT
