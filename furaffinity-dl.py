@@ -35,6 +35,7 @@ parser.add_argument('--stop', '-S', dest='stop', type=str, default='', help="Pag
 parser.add_argument('--dont-redownload', '-d', const='dont_redownload', action='store_const', help="Don't redownload files that have already been downloaded")
 parser.add_argument('--interval', '-i', dest='interval', type=float, default=0, help="delay between downloading pages")
 parser.add_argument('--metadir', '-m', dest='metadir', type=str, default=None, help="directory to put meta files in")
+parser.add_argument('--html', '-H', dest='html_meta', action='store_true', help='Download descriptions as html in addition to plain text.')
 
 args = parser.parse_args()
 if args.username is None:
@@ -98,6 +99,22 @@ def download_file(url, fname, desc):
             bar.update(size)
     return True
 
+# get a description from the soup, as html or plaintext
+def get_description(s, get_html = False):
+    desc = s.find(class_='submission-description')
+
+    if (get_html):
+        #get the submission div as a string
+        s = str(desc) 
+
+        # html.parser may try to balance non-terminating <br> tags by appending lots of </br> tags at the end.
+        # avoid this by stripping them out of the capture.
+        s = re.sub(r'(</br>)','',s) 
+
+        return s.strip()
+    else:
+        return desc.text.strip().replace('\r\n', '\n')
+
 
 # The cursed function that handles downloading
 def download(path):
@@ -119,7 +136,7 @@ def download(path):
         'author': s.find(class_='submission-id-sub-container').find('a').find('strong').text,
         'date': s.find(class_='popup_date').attrs.get('title'),
         'title': title,
-        'description': s.find(class_='submission-description').text.strip().replace('\r\n', '\n'),
+        'description': get_description(s, get_html = False),
         "tags": [],
         'category': s.find(class_='info').find(class_='category-name').text,
         'type': s.find(class_='info').find(class_='type-name').text,
@@ -130,6 +147,11 @@ def download(path):
         'rating': s.find(class_='rating-box').text.strip(),
         'comments': []
     }
+
+    if (args.html_meta): 
+        #print("downloading html meta")
+        data['description_html'] = get_description(s, get_html = True)
+        #print(data)
 
     # Extact tags
     try:
