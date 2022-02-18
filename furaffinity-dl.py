@@ -132,8 +132,11 @@ def download(path):
     }
 
     # Extact tags
-    for tag in s.find(class_='tags-row').findAll(class_='tags'):
-        data['tags'].append(tag.find('a').text)
+    try:
+        for tag in s.find(class_='tags-row').findAll(class_='tags'):
+            data['tags'].append(tag.find('a').text)
+    except:
+        pass
 
     # Extract comments
     for comment in s.findAll(class_='comment_container'):
