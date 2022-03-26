@@ -81,7 +81,7 @@ page_num = args.start
 def download_file(url, fname, desc):
     r = session.get(url, stream=True)
     if r.status_code != 200:
-        print("Got a HTTP {} while downloading; skipping".format(r.status_code))
+        print("Got a HTTP {} while downloading {}; skipping".format(r.status_code, fname))
         return False
 
     total = int(r.headers.get('Content-Length', 0))
