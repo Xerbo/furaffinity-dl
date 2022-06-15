@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import argparse
+from types import NoneType
 from tqdm import tqdm
 from argparse import RawTextHelpFormatter
 import json
@@ -15,13 +16,14 @@ Please refer to LICENSE for licensing conditions.
 '''
 
 # Argument parsing
-parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description='Downloads the entire gallery/scraps/favorites of a furaffinity user', epilog='''
+parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter, description='Downloads the entire gallery/scraps/favorites of a furaffinity user, or your submissions', epilog='''
 Examples:
  python3 furaffinity-dl.py gallery koul
  python3 furaffinity-dl.py -o koulsArt gallery koul
  python3 furaffinity-dl.py -o mylasFavs favorites mylafox\n
-You can also log in to FurAffinity in a web browser and load cookies to download restricted content:
- python3 furaffinity-dl.py -c cookies.txt gallery letodoesart\n
+You can also log in to FurAffinity in a web browser and load cookies to download Age restricted content or Submissions:
+ python3 furaffinity-dl.py -c cookies.txt gallery letodoesart
+ python3 furaffinity-dl.py -c cookies.txt msg submissions\n
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
 ''')
 parser.add_argument('category', metavar='category', type=str, nargs='?', default='gallery', help='the category to download, gallery/scraps/favorites')
@@ -52,7 +54,7 @@ else:
 
 
 # Check validity of category
-valid_categories = ['gallery', 'favorites', 'scraps']
+valid_categories = ['gallery', 'favorites', 'scraps', 'msg']
 if args.category not in valid_categories:
     raise Exception('Category is not valid', args.category)
 
@@ -171,9 +173,11 @@ def download(path):
 
     return True
 
-
+global i
+i = 1
 # Main downloading loop
 while True:
+    
     if args.stop and args.stop == page_num:
         print(f"Reached page {args.stop}, stopping.")
         break
@@ -204,8 +208,24 @@ while True:
     for img in s.findAll('figure'):
         download(img.find('a').attrs.get('href'))
         sleep(args.interval)
+        
+    if args.category == "msg":
+        next_button = s.find('a', class_='button standard more', text="Next 48")
+        
+        if next_button is None or next_button.parent is None:
+            next_button = s.find('a', class_='button standard more-half', text="Next 48") 
+            if next_button is None or next_button.parent is None:
+                print('Unable to find next button')
+                break
+        
+        next_page_link = next_button.attrs['href']
 
-    if args.category != "favorites":
+        i = i + 1
+        page_num = next_page_link.split('/')[-2]
+        page_url = base_url + next_page_link 
+        
+        print('Downloading page', i, page_url)
+    elif args.category != "favorites":
         next_button = s.find('button', class_='button standard', text="Next")
         if next_button is None or next_button.parent is None:
             print('Unable to find next button')

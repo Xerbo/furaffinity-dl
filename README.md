@@ -1,7 +1,8 @@
 This branch is the development version of furaffinity-dl rewritten in python.
 
 # FurAffinity Downloader
-**furaffinity-dl** is a python script for batch downloading of galleries (and scraps/favourites) from furaffinity users.
+
+**furaffinity-dl** is a python script for batch downloading of galleries (and scraps/favourites) from furaffinity users users or your submissons!
 It was written for preservation of culture, to counter the people nuking their galleries every once a while.
 
 Supports all known submission types: images, text, flash and audio.
@@ -18,18 +19,20 @@ furaffinity-dl has only been tested only on Linux, however it should also work o
 
 When downloading a folder make sure to put everything after **/folder/**, for example 123456/Folder-Name-Here instead of just 123456 (ref [#60](https://github.com/Xerbo/furaffinity-dl/issues/60)).
 
-```
-usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--dont-redownload] [--interval INTERVAL] [--metadir METADIR]
+```help
+
+usage: furaffinity-dl.py [-h] [--output OUTPUT] [--cookies COOKIES] [--ua UA] [--start START] [--stop STOP] [--dont-redownload]
+                         [--interval INTERVAL] [--metadir METADIR]
                          [category] [username] [folder]
 
-Downloads the entire gallery/scraps/favorites of a furaffinity user
+Downloads the entire gallery/scraps/favorites of a furaffinity user, or your submissions
 
 positional arguments:
   category              the category to download, gallery/scraps/favorites
   username              username of the furaffinity user
   folder                name of the folder (full path, for instance 123456/Folder-Name-Here)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   --output OUTPUT, -o OUTPUT
                         output directory
@@ -38,6 +41,7 @@ optional arguments:
   --ua UA, -u UA        Your browser's useragent, may be required, depending on your luck
   --start START, -s START
                         page number to start from
+  --stop STOP, -S STOP  Page number to stop on. For favorites pages, specify the full URL after the username (1234567890/next).
   --dont-redownload, -d
                         Don't redownload files that have already been downloaded
   --interval INTERVAL, -i INTERVAL
@@ -50,10 +54,12 @@ Examples:
  python3 furaffinity-dl.py -o koulsArt gallery koul
  python3 furaffinity-dl.py -o mylasFavs favorites mylafox
 
-You can also log in to FurAffinity in a web browser and load cookies to download restricted content:
+You can also log in to FurAffinity in a web browser and load cookies to download Age restricted content or Submissions:
  python3 furaffinity-dl.py -c cookies.txt gallery letodoesart
+ python3 furaffinity-dl.py -c cookies.txt msg submissions
 
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
+
 ```
 
 You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome based browsers](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)), you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user agent):
@@ -62,9 +68,9 @@ You can also log in to download restricted content. To do that, log in to FurAff
 
 ## TODO
 
- - Download user profile information.
- - "Classic" theme support
- - Login without having to export cookies
+- Download user profile information.
+- "Classic" theme support
+- Login without having to export cookies
 
 ## Disclaimer
 
