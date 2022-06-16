@@ -8,6 +8,9 @@ cookies.txt
 *.gif
 *.swf
 
-# code monitoring stuff
+# Download folder
+furaffinity-dl/
+
+# vscode stuff
 .vscode
 ignore
