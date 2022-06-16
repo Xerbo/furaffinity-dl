@@ -7,3 +7,7 @@ cookies.txt
 *.json
 *.gif
 *.swf
+
+# code monitoring stuff
+.vscode
+ignore
