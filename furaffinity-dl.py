@@ -281,9 +281,12 @@ def download(path):
 
         # Extract description as list
         if args.json_description is True:
-            for desc in s.find("div", class_="submission-description").strings:
-                description = desc.strip()
-                data["description"].append(description)
+            for desc in s.find("div", class_="submission-description").stripped_strings:
+
+                if re.search("[<>/]", desc) is True:
+                    desc = desc.replace("<", "").replace(">", "").replace("/", "")
+
+                data["description"].append(desc)
 
         # Extact tags
 
@@ -447,7 +450,8 @@ def main():
 
 
 def login():
-    import browser_cookie3  
+    import browser_cookie3
+
     CJ = browser_cookie3.load()
     response = session.get(BASE_URL, cookies=CJ)
     FA_COOKIES = CJ._cookies[".furaffinity.net"]["/"]
@@ -465,9 +469,8 @@ def login():
                 f"""# Netscape HTTP Cookie File
 # http://curl.haxx.se/rfc/cookie_spec.html
 # This is a generated file!  Do not edit.
-.furaffinity.net        TRUE    /       TRUE    {cookie_a.expires}      b       {cookie_a.value}
-.furaffinity.net        TRUE    /       TRUE    {cookie_b.expires}      a       {cookie_b.value}
-"""
+.furaffinity.net	TRUE	/	TRUE	{cookie_a.expires}	a	{cookie_a.value}
+.furaffinity.net	TRUE	/	TRUE	{cookie_b.expires}	b	{cookie_b.value}"""
             )
         print(
             f'{GREEN}<i> cookies saved successfully, now you can provide them by using "-c cookies.txt"{END}'
