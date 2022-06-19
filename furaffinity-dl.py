@@ -206,10 +206,6 @@ def download(path):
     image = s.find(class_="download").find("a").attrs.get("href")
     title = s.find(class_="submission-title").find("p").contents[0] + " "
     description = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
-    author = s.find(class_="submission-id-sub-container")
-    if args.submissions is True:   
-        global output 
-        output = f"furaffinity-dl/gallery/{author}"
         
     if args.json_description is True:
         description = []
@@ -217,7 +213,7 @@ def download(path):
     data = {
         "id": int(path.split("/")[-2:-1][0]),
         "filename": filename,
-        "author": author
+        "author": s.find(class_="submission-id-sub-container")
         .find("a")
         .find("strong")
         .text,
@@ -235,6 +231,10 @@ def download(path):
         "rating": s.find(class_="rating-box").text.strip(),
         "comments": [],
     }
+    
+    if args.submissions is True:   
+        global output 
+        output = f"furaffinity-dl/gallery/{data.get('author')}"
 
     if args.filter is True:
         match = re.search(
