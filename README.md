@@ -12,7 +12,7 @@ Supports all known submission types: images, text, flash and audio.
 
 `python 3`
 
-`pip install -r requirements.txt`
+`pip3 install -r requirements.txt`
 
 **The script currently only works with the "Modern" theme**
 
@@ -27,6 +27,7 @@ When downloading a folder make sure to put everything after **/folder/**, for ex
 usage: furaffinity-dl.py [-h] [--submissions] [--folder FOLDER [FOLDER ...]] [--cookies COOKIES [COOKIES ...]]
                          [--user-agent USER_AGENT [USER_AGENT ...]] [--start START [START ...]] [--stop STOP [STOP ...]] [--dont-redownload]
                          [--interval INTERVAL [INTERVAL ...]] [--rating] [--filter] [--metadata] [--download DOWNLOAD] [--json-description]
+                         [--login]
                          [username] [category]
 
 Downloads the entire gallery/scraps/folder/favorites of a furaffinity user, or your submissions notifications
@@ -57,23 +58,24 @@ options:
   --metadata, -m        enable downloading of metadata
   --download DOWNLOAD   download a specific submission /view/12345678/
   --json-description    download description as a JSON list
+  --login               extract furaffinity cookies directly from your browser
 
 Examples:
  python3 furaffinity-dl.py koul -> will download gallery of user koul
  python3 furaffinity-dl.py koul scraps -> will download scraps of user koul
- python3 furaffinity-dl.py mylafox favorites -> will download favorites of user mylafox 
+ python3 furaffinity-dl.py mylafox favorites -> will download favorites of user mylafox
 
 You can also log in to FurAffinity in a web browser and load cookies to download age restricted content or submissions:
  python3 furaffinity-dl.py letodoesart -c cookies.txt -> will download gallery of user letodoesart including Mature and Adult submissions
- python3 furaffinity-dl.py --submissions -c cookies.txt -> will download your submissions notifications 
+ python3 furaffinity-dl.py --submissions -c cookies.txt -> will download your submissions notifications
 
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
 
 ```
 
-You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome based browsers](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid?hl=en)), you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user agent):
+You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, and use `python3 furaffinity-dl.py --login` to export furaffinity cookies from your web browser in Netscape format directly in file `cookies.txt` or export them manually with extensions: [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome based browsers](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid?hl=en), then you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user agent):
 
-`python3 furaffinity-dl.py -c cookies.txt -u 'Mozilla/5.0 ....' gallery letodoesart`
+`python3 furaffinity-dl.py letodoesart -c cookies.txt --user_agent 'Mozilla/5.0 ....'`
 
 ## TODO
 

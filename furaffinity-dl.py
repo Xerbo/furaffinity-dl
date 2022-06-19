@@ -54,7 +54,9 @@ parser.add_argument(
     "--user-agent",
     dest="user_agent",
     nargs="+",
-    default="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0",
+    default=[
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 Firefox/101.0"
+    ],
     help="Your browser's useragent, may be required, depending on your luck",
 )
 parser.add_argument(
@@ -108,13 +110,20 @@ parser.add_argument(
     action="store_true",
     help="download description as a JSON list",
 )
+parser.add_argument(
+    "--login",
+    action="store_true",
+    help="extract furaffinity cookies directly from your browser",
+)
 
 args = parser.parse_args()
 
 BASE_URL = "https://www.furaffinity.net"
 username = args.username
 
-if args.submissions is False and args.download is None:  # check if you are not downloading submissions or a specific post
+if (
+    args.submissions is False and args.login is False and args.download is None
+):  # check if you are not downloading submissions or a specific post
     categories = {
         "gallery": "gallery",
         "scraps": "scraps",
@@ -141,6 +150,8 @@ if args.cookies is not None:  # add cookies if present
     session.cookies = cookies
 
 # File downloading
+
+
 def download_file(url, fname, desc):
     try:
         r = session.get(url, stream=True)
@@ -175,13 +186,14 @@ if args.folder is not None:
     folder = args.folder[0].split("/")
     download_url = f"{BASE_URL}/gallery/{username}/folder/{args.folder[0]}"
     output = f"furaffinity-dl/folders/{username}/{folder[1]}"
-if args.submissions is True:    
+if args.submissions is True:
     download_url = f"{BASE_URL}/msg/submissions"
+
 
 def download(path):
     response = session.get(f"{BASE_URL}{path}")
     s = BeautifulSoup(response.text, "html.parser")
-    
+
     # System messages
     if s.find(class_="notice-message") is not None:
         try:
@@ -205,8 +217,10 @@ def download(path):
 
     image = s.find(class_="download").find("a").attrs.get("href")
     title = s.find(class_="submission-title").find("p").contents[0] + " "
-    description = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
-        
+    description = (
+        s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
+    )
+
     if args.json_description is True:
         description = []
     filename = image.split("/")[-1:][0]
@@ -231,14 +245,14 @@ def download(path):
         "rating": s.find(class_="rating-box").text.strip(),
         "comments": [],
     }
-    
-    if args.submissions is True:   
-        global output 
+
+    if args.submissions is True:
+        global output
         output = f"furaffinity-dl/gallery/{data.get('author')}"
 
     if args.filter is True:
         match = re.search(
-            "YCH[a-z $-/:-?{-~!\"^_`\[\]]*OPEN|OPEN[a-z $-/:-?{-~!\"^_`\[\]]*YCH|YCH[a-z $-/:-?{-~!\"^_`\[\]]*CLOSE|CLOSE[a-z $-/:-?{-~!\"^_`\[\]]*YCH|YCH[a-z $-/:-?{-~!\"^_`\[\]]*ABLE|AVAIL[a-z $-/:-?{-~!\"^_`\[\]]*YCH|YCH[a-z $-/:-?{-~!\"^_`\[\]]*CLONE|CLONE[a-z $-/:-?{-~!\"^_`\[\]]*YCH|YCH[a-z $-/:-?{-~!\"^_`\[\]]*LIM|LIM[a-z $-/:-?{-~!\"^_`\[\]]*YCH|COM[a-z $-/:-?{-~!\"^_`\[\]]*OPEN|OPEN[a-z $-/:-?{-~!\"^_`\[\]]*COM|COM[a-z $-/:-?{-~!\"^_`\[\]]*CLOSE|CLOSE[a-z $-/:-?{-~!\"^_`\[\]]*COM|FIX[a-z $-/:-?{-~!\"^_`\[\]]*ICE|REM[insder]*\W|\\bREF|Sale$|auction|multislot|stream|adopt",
+            'YCH[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN|OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*YCH|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE|CLOSE[a-z $-/:-?{-~!"^_`\\[\\]]*YCH|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*ABLE|AVAIL[a-z $-/:-?{-~!"^_`\\[\\]]*YCH|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLONE|CLONE[a-z $-/:-?{-~!"^_`\\[\\]]*YCH|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*LIM|LIM[a-z $-/:-?{-~!"^_`\\[\\]]*YCH|COM[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN|OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*COM|COM[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE|CLOSE[a-z $-/:-?{-~!"^_`\\[\\]]*COM|FIX[a-z $-/:-?{-~!"^_`\\[\\]]*ICE|REM[insder]*\\W|\\bREF|\\bSale\\W|auction|multislot|stream|adopt',
             title,
             re.IGNORECASE,
         )
@@ -249,7 +263,7 @@ def download(path):
             return True
 
     image_url = f"https:{image}"
-    
+
     os.makedirs(output, exist_ok=True)
     output_path = f"{output}/{filename}"
     if args.rating is True:
@@ -264,13 +278,13 @@ def download(path):
     if args.metadata is True:
 
         metadata = f"{output}/metadata"
-        
+
         # Extract description as list
         if args.json_description is True:
             for desc in s.find("div", class_="submission-description").strings:
                 description = desc.strip()
                 data["description"].append(description)
-            
+
         # Extact tags
 
         try:
@@ -310,13 +324,16 @@ def download(path):
 
     return True
 
+
 if args.download is not None:
     output = "furaffinity-dl/downloaded/"
     download(args.download)
     print(f"{GREEN}<i> File downloaded{END}")
     exit()
-        
+
 # Main function
+
+
 def main():
     # check if you are logged in
     page_end = args.stop[0]
@@ -429,5 +446,42 @@ def main():
     print(f"{GREEN}Finished downloading{END}")
 
 
+def login():
+    import browser_cookie3  
+    CJ = browser_cookie3.load()
+    response = session.get(BASE_URL, cookies=CJ)
+    FA_COOKIES = CJ._cookies[".furaffinity.net"]["/"]
+
+    cookie_a = FA_COOKIES["a"]
+    cookie_b = FA_COOKIES["b"]
+
+    s = BeautifulSoup(response.text, "html.parser")
+    try:
+        s.find(class_="loggedin_user_avatar")
+        account_username = s.find(class_="loggedin_user_avatar").attrs.get("alt")
+        print(f"{GREEN}<i> Logged in as: {account_username}{END}")
+        with open("cookies.txt", "w") as file:
+            file.write(
+                f"""# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+.furaffinity.net        TRUE    /       TRUE    {cookie_a.expires}      b       {cookie_a.value}
+.furaffinity.net        TRUE    /       TRUE    {cookie_b.expires}      a       {cookie_b.value}
+"""
+            )
+        print(
+            f'{GREEN}<i> cookies saved successfully, now you can provide them by using "-c cookies.txt"{END}'
+        )
+    except AttributeError:
+        print(
+            f"{RED}<i> Error getting cookies, either you need to login into furaffinity in your browser, or you can export cookies.txt manually{END}"
+        )
+
+    exit()
+
+
 if __name__ == "__main__":
+    if args.login is True:
+        login()
+
     main()
