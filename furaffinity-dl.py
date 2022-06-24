@@ -40,17 +40,19 @@ parser.add_argument(
     default="gallery",
 )
 parser.add_argument(
-    "--submissions", action="store_true", help="download your submissions"
+    "-sub", "--submissions", action="store_true", help="download your submissions"
 )
 parser.add_argument(
+    "-f",
     "--folder",
     nargs="+",
     help="full path of the furaffinity gallery folder. for instance 123456/Folder-Name-Here",
 )
 parser.add_argument(
-    "--cookies", "-c", nargs="+", help="path to a NetScape cookies file"
+    "-c", "--cookies", nargs="+", help="path to a NetScape cookies file"
 )
 parser.add_argument(
+    "-ua",
     "--user-agent",
     dest="user_agent",
     nargs="+",
@@ -70,10 +72,11 @@ parser.add_argument(
     help="Page number to stop on. Specify the full URL after the username: for favorites pages (1234567890/next) or for submissions pages: (new~123456789@48)",
 )
 parser.add_argument(
-    "--dont-redownload",
-    "-d",
+    "--redownload",
+    "-rd",
+    dest="dont_redownload",
     action="store_false",
-    help="Allow to redownload files that have been downloaded already",
+    help="Redownload files that have been downloaded already",
 )
 parser.add_argument(
     "--interval",
@@ -98,13 +101,14 @@ parser.add_argument(
     "--metadata",
     "-m",
     action="store_true",
-    help="enable downloading of metadata",
+    help="enable metadata saving",
 )
 parser.add_argument(
     "--download",
     help="download a specific submission /view/12345678/",
 )
 parser.add_argument(
+    "-jd",
     "--json-description",
     dest="json_description",
     action="store_true",
@@ -163,7 +167,7 @@ def download_file(url, fname, desc):
 
         total = int(r.headers.get("Content-Length", 0))
         with open(fname, "wb") as file, tqdm(
-            desc=desc.ljust(60)[:60],
+            desc=desc.ljust(40)[:40],
             total=total,
             miniters=100,
             unit="b",
@@ -216,7 +220,7 @@ def download(path):
         exit()
 
     image = s.find(class_="download").find("a").attrs.get("href")
-    title = s.find(class_="submission-title").find("p").contents[0] + " "
+    title = f' {s.find(class_="submission-title").find("p").contents[0]} '
     description = (
         s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
     )
@@ -246,7 +250,7 @@ def download(path):
         "comments": [],
     }
 
-    if args.submissions is True:
+    if args.submissions is True or args.download is not None:
         global output
         output = f"furaffinity-dl/gallery/{data.get('author')}"
 
@@ -258,33 +262,40 @@ def download(path):
         )
         if match is not None and title == match.string:
             print(
-                f"{YELLOW}<i> post {title} was filtered and will not be downloaded - {data.get('url')}{END}"
+                f"{YELLOW}<i> post:{title}was filtered and will not be downloaded - {data.get('url')}{END}"
             )
             return True
 
     image_url = f"https:{image}"
 
     os.makedirs(output, exist_ok=True)
+    global output_path
     output_path = f"{output}/{filename}"
     if args.rating is True:
         os.makedirs(f'{output}/{data.get("rating")}', exist_ok=True)
         output_path = f'{output}/{data.get("rating")}/{filename}'
 
     if args.dont_redownload is True and os.path.isfile(output_path):
-        print(f'{YELLOW}<i> Skipping "{title}", since it\'s already downloaded{END}')
+        print(f"{YELLOW}<i> Skipping:{title} since it's already downloaded{END}")
     else:
         download_file(image_url, output_path, title)
 
     if args.metadata is True:
 
-        metadata = f"{output}/metadata"
+        metadata = output_path
 
         # Extract description as list
         if args.json_description is True:
             for desc in s.find("div", class_="submission-description").stripped_strings:
 
-                if re.search("[<>/]", desc) is True:
-                    desc = desc.replace("<", "").replace(">", "").replace("/", "")
+                if re.search("<", desc) is True:
+                    desc = desc.replace("<", "")
+
+                if re.search(">", desc) is True:
+                    desc = desc.replace(">", "")
+
+                if re.search("/", desc) is True:
+                    desc = desc.replace("/", "")
 
                 data["description"].append(desc)
 
@@ -294,7 +305,7 @@ def download(path):
             for tag in s.find(class_="tags-row").findAll(class_="tags"):
                 data["tags"].append(tag.find("a").text)
         except AttributeError:
-            print(f'{YELLOW}<i> post: "{title}", has no tags{END}')
+            print(f"{YELLOW}<i> post:{title} has no tags{END}")
 
         # Extract comments
         for comment in s.findAll(class_="comment_container"):
@@ -319,19 +330,15 @@ def download(path):
             )
 
         # Write a UTF-8 encoded JSON file for metadata
-        os.makedirs(metadata, exist_ok=True)
-        with open(
-            os.path.join(metadata, f"{filename}.json"), "w", encoding="utf-8"
-        ) as f:
+        with open(f"{metadata}.json", "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
     return True
 
 
 if args.download is not None:
-    output = "furaffinity-dl/downloaded/"
     download(args.download)
-    print(f"{GREEN}<i> File downloaded{END}")
+    print(f"{GREEN}<i> File saved as {output_path} {END}")
     exit()
 
 # Main function
