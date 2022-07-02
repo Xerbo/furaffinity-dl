@@ -8,9 +8,10 @@ cookies.txt
 *.gif
 *.swf
 
-# Download folder
-furaffinity-dl/
+# Default download folder
+Submissions/
 
 # vscode stuff
 .vscode
-ignore
+list.txt
+dl_dev.py

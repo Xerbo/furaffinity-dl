@@ -24,9 +24,9 @@ When downloading a folder make sure to put everything after **/folder/**, for ex
 
 ```help
 
-usage: furaffinity-dl.py [-h] [-sub] [-f FOLDER [FOLDER ...]] [-c COOKIES [COOKIES ...]] [-ua USER_AGENT [USER_AGENT ...]] [--start START [START ...]]
-                         [--stop STOP [STOP ...]] [--redownload] [--interval INTERVAL [INTERVAL ...]] [--rating] [--filter] [--metadata] [--download DOWNLOAD]
-                         [-jd] [--login]
+usage: furaffinity-dl.py [-h] [-sub] [-f FOLDER [FOLDER ...]] [-c COOKIES [COOKIES ...]] [-ua USER_AGENT [USER_AGENT ...]]
+                         [--start START [START ...]] [--stop STOP [STOP ...]] [--redownload] [--interval INTERVAL [INTERVAL ...]] [--rating]
+                         [--filter] [--metadata] [--download DOWNLOAD] [-jd] [--login] [--check] [--output]
                          [username] [category]
 
 Downloads the entire gallery/scraps/folder/favorites of a furaffinity user, or your submissions notifications
@@ -52,17 +52,23 @@ options:
   --interval INTERVAL [INTERVAL ...], -i INTERVAL [INTERVAL ...]
                         delay between downloading pages in seconds [default: 0]
   --rating, -r          disable rating separation
-  --filter              disable submission filter
+  --filter              enable submission filter
   --metadata, -m        enable metadata saving
   --download DOWNLOAD   download a specific submission /view/12345678/
   -jd, --json-description
                         download description as a JSON list
   --login               extract furaffinity cookies directly from your browser
+  --check               check and download latest submissions of a user
+  --output, -o          set a custom output folder
 
 Examples:
  python3 furaffinity-dl.py koul -> will download gallery of user koul
  python3 furaffinity-dl.py koul scraps -> will download scraps of user koul
  python3 furaffinity-dl.py mylafox favorites -> will download favorites of user mylafox 
+
+You can also download a several users in one go like this:
+ python3 furaffinity-dl.py "koul radiquum mylafox" -> will download gallery of users koul -> radiquum -> mylafox
+You can also provide a file with user names that are separated by a new line
 
 You can also log in to FurAffinity in a web browser and load cookies to download age restricted content or submissions:
  python3 furaffinity-dl.py letodoesart -c cookies.txt -> will download gallery of user letodoesart including Mature and Adult submissions
