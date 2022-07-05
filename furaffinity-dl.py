@@ -225,7 +225,7 @@ def system_message_handler(s):
     raise System_Message
 
 
-def check_filter(title, url):
+def check_filter(title):
     search = 'YCH[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN\
 |OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
 |YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE\
@@ -252,11 +252,8 @@ def check_filter(title, url):
         re.IGNORECASE,
     )
     if match is not None and title == match.string:
-        print(
-            f'{YELLOW}"{title}" was filtered and will not be \
-downloaded - {url}{END}'
-        )
         return True
+    return None
 
 
 def create_metadata(output, data, s, title, filename):
@@ -385,8 +382,10 @@ def download(path):
         "rating": s.find(class_="rating-box").text.strip(),
         "comments": [],
     }
-    if args.filter is True:
-        check_filter(title, data.get("url"))
+    if args.filter is True and check_filter(title) is True:
+        print(f'{YELLOW}"{title}" was filtered and will not be \
+downloaded - {data.get("url")}{END}')
+        return True
 
     image_url = f"https:{image}"
     output = f"{args.output_folder}/{data.get('author')}"
