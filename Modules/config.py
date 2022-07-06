@@ -72,7 +72,7 @@ parser.add_argument(
 Folder-Name-Here",
 )
 parser.add_argument(
-    "-s", "--start", default=1, help="page number to start from", nargs="+"
+    "-s", "--start", default=1, help="page number to start from",
 )
 parser.add_argument(
     "-S",

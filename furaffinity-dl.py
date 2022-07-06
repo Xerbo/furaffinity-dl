@@ -8,8 +8,8 @@ import requests
 from bs4 import BeautifulSoup
 
 import Modules.config as config
+from Modules.download import download
 from Modules.functions import download_complete
-from Modules.functions import download
 from Modules.functions import login
 from Modules.functions import next_button
 from Modules.functions import system_message_handler
