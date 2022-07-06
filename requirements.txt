@@ -3,3 +3,4 @@ requests
 tqdm
 browser-cookie3
 pathvalidate
+pre-commit

@@ -14,4 +14,4 @@ Submissions/
 # vscode stuff
 .vscode
 list.txt
-dl_dev.py
+__pycache__

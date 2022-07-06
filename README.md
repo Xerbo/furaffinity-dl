@@ -24,9 +24,8 @@ When downloading a folder make sure to put everything after **/folder/**, for ex
 
 ```help
 
-usage: furaffinity-dl.py [-h] [-sub] [-f FOLDER [FOLDER ...]] [-c COOKIES [COOKIES ...]] [-ua USER_AGENT [USER_AGENT ...]]
-                         [--start START [START ...]] [--stop STOP [STOP ...]] [--redownload] [--interval INTERVAL [INTERVAL ...]] [--rating]
-                         [--filter] [--metadata] [--download DOWNLOAD] [-jd] [--login] [--check] [--output]
+usage: furaffinity-dl.py [-h] [-c COOKIES] [--output OUTPUT_FOLDER] [--check] [-ua USER_AGENT] [-sub] [-f FOLDER] [-s START [START ...]]
+                         [-S STOP] [-rd] [-i INTERVAL] [-r] [--filter] [-m] [--download DOWNLOAD] [-jd] [--login]
                          [username] [category]
 
 Downloads the entire gallery/scraps/folder/favorites of a furaffinity user, or your submissions notifications
@@ -37,34 +36,34 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -sub, --submissions   download your submissions
-  -f FOLDER [FOLDER ...], --folder FOLDER [FOLDER ...]
-                        full path of the furaffinity gallery folder. for instance 123456/Folder-Name-Here
-  -c COOKIES [COOKIES ...], --cookies COOKIES [COOKIES ...]
+  -c COOKIES, --cookies COOKIES
                         path to a NetScape cookies file
-  -ua USER_AGENT [USER_AGENT ...], --user-agent USER_AGENT [USER_AGENT ...]
+  --output OUTPUT_FOLDER, -o OUTPUT_FOLDER
+                        set a custom output folder
+  --check               check and download latest submissions of a user
+  -ua USER_AGENT, --user-agent USER_AGENT
                         Your browser's useragent, may be required, depending on your luck
-  --start START [START ...], -s START [START ...]
+  -sub, --submissions   download your submissions
+  -f FOLDER, --folder FOLDER
+                        full path of the furaffinity gallery folder. for instance 123456/Folder-Name-Here
+  -s START [START ...], --start START [START ...]
                         page number to start from
-  --stop STOP [STOP ...], -S STOP [STOP ...]
-                        Page number to stop on. Specify the full URL after the username: for favorites pages (1234567890/next) or for submissions pages: (new~123456789@48)
-  --redownload, -rd     Redownload files that have been downloaded already
-  --interval INTERVAL [INTERVAL ...], -i INTERVAL [INTERVAL ...]
+  -S STOP, --stop STOP  Page number to stop on. Specify the full URL after the username: for favorites pages (1234567890/next) or for submissions pages: (new~123456789@48)
+  -rd, --redownload     Redownload files that have been downloaded already
+  -i INTERVAL, --interval INTERVAL
                         delay between downloading pages in seconds [default: 0]
-  --rating, -r          disable rating separation
+  -r, --rating          disable rating separation
   --filter              enable submission filter
-  --metadata, -m        enable metadata saving
+  -m, --metadata        enable metadata saving
   --download DOWNLOAD   download a specific submission /view/12345678/
   -jd, --json-description
                         download description as a JSON list
   --login               extract furaffinity cookies directly from your browser
-  --check               check and download latest submissions of a user
-  --output, -o          set a custom output folder
 
 Examples:
  python3 furaffinity-dl.py koul -> will download gallery of user koul
  python3 furaffinity-dl.py koul scraps -> will download scraps of user koul
- python3 furaffinity-dl.py mylafox favorites -> will download favorites of user mylafox 
+ python3 furaffinity-dl.py mylafox favorites -> will download favorites of user mylafox
 
 You can also download a several users in one go like this:
  python3 furaffinity-dl.py "koul radiquum mylafox" -> will download gallery of users koul -> radiquum -> mylafox
@@ -72,7 +71,7 @@ You can also provide a file with user names that are separated by a new line
 
 You can also log in to FurAffinity in a web browser and load cookies to download age restricted content or submissions:
  python3 furaffinity-dl.py letodoesart -c cookies.txt -> will download gallery of user letodoesart including Mature and Adult submissions
- python3 furaffinity-dl.py --submissions -c cookies.txt -> will download your submissions notifications 
+ python3 furaffinity-dl.py --submissions -c cookies.txt -> will download your submissions notifications
 
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
 
