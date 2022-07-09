@@ -4,6 +4,8 @@ import re
 import browser_cookie3
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 import Modules.config as config
 
@@ -13,39 +15,43 @@ if config.cookies is not None:  # add cookies if present
     cookies.load()
     session.cookies = cookies
 
+session.headers.update({"User-Agent": config.user_agent})
+
+
+def requests_retry_session(
+    retries=3,
+    backoff_factor=0.3,
+    status_forcelist=(500, 502, 504, 104),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
 
 class download_complete(Exception):
     pass
 
 
 def check_filter(title):
-    search = 'YCH[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN\
-|OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
-|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE\
-|CLOSE[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
-|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*ABLE\
-|AVAIL[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
-|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLONE\
-|CLONE[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
-|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*LIM\
-|LIM[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
-|COM[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN\
-|OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*COM\
-|COM[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE[^r]\
-|CLOSE[a-z $-/:-?{-~!"^_`\\[\\]]*COM\
-|FIX[a-z $-/:-?{-~!"^_`\\[\\]]*ICE\
-|TELEGRAM[a-z $-/:-?{-~!"^_`\\[\\]]*STICK\
-|TG[a-z $-/:-?{-~!"^_`\\[\\]]*STICK\
-|REM[insder]*\\b\
-|\\bREF|\\bSale|auction|multislot|stream|adopt'
 
     match = re.search(
-        search,
+        config.search,
         title,
         re.IGNORECASE,
     )
     if match is not None and title == match.string:
         return True
+
     return None
 
 
@@ -68,9 +74,7 @@ def system_message_handler(s):
     raise download_complete
 
 
-def login(user_agent):
-
-    session.headers.update({"User-Agent": user_agent})
+def login():
 
     CJ = browser_cookie3.load()
 
@@ -103,8 +107,6 @@ by using "-c cookies.txt"{config.END}'
 furaffinity in your browser, or you can export cookies.txt manually{config.END}"
         )
 
-    exit()
-
 
 def next_button(page_url):
     response = session.get(page_url)
@@ -130,15 +132,17 @@ def next_button(page_url):
             raise download_complete
         page_num = next_button.parent.attrs["action"].split("/")[-2]
     else:
+        next_button = s.find("a", class_="button standard right", text="Next")
         page_num = fav_next_button(s)
-    print(f"Downloading page {page_num} - {page_url}")
+    print(
+        f"Downloading page {page_num} - {config.BASE_URL}/{next_button.parent.attrs['action']}"
+    )
     return page_num
 
 
-def fav_next_button(s):
+def fav_next_button():
     # unlike galleries that are sequentially numbered, favorites use a different scheme.
     # the "page_num" is instead: [set of numbers]/next (the trailing /next is required)
-    next_button = s.find("a", class_="button standard right", text="Next")
     if next_button is None:
         print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
         raise download_complete

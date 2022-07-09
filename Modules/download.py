@@ -1,12 +1,16 @@
+import http.cookiejar as cookielib
 import json
-from tqdm import tqdm
-from pathvalidate import sanitize_filename
-import Modules.config as config
 import os
+
 import requests
 from bs4 import BeautifulSoup
-import http.cookiejar as cookielib
-from Modules.functions import system_message_handler, check_filter, download_complete
+from pathvalidate import sanitize_filename
+from tqdm import tqdm
+
+import Modules.config as config
+from Modules.functions import download_complete
+from Modules.functions import requests_retry_session
+from Modules.functions import system_message_handler
 
 session = requests.session()
 if config.cookies is not None:  # add cookies if present
@@ -14,8 +18,10 @@ if config.cookies is not None:  # add cookies if present
     cookies.load()
     session.cookies = cookies
 
+
 def download(path):
-    response = session.get(f"{config.BASE_URL}{path}")
+
+    response = requests_retry_session(session=session).get(f"{config.BASE_URL}{path}")
     s = BeautifulSoup(response.text, "html.parser")
 
     # System messages
@@ -23,77 +29,70 @@ def download(path):
         system_message_handler(s)
 
     image = s.find(class_="download").find("a").attrs.get("href")
-    title = s.find(class_="submission-title").find("p").contents[0]
-    title = sanitize_filename(title)
-    dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
+    filename = sanitize_filename(image.split("/")[-1:][0])
 
-    if config.json_description is True:
-        dsc = []
-    filename = image.split("/")[-1:][0]
-    data = {
-        "id": int(path.split("/")[-2:-1][0]),
-        "filename": filename,
-        "author": s.find(class_="submission-id-sub-container")
-        .find("a")
-        .find("strong")
-        .text,
-        "date": s.find(class_="popup_date").attrs.get("title"),
-        "title": title,
-        "description": dsc,
-        "url": f"{config.BASE_URL}{path}",
-        "tags": [],
-        "category": s.find(class_="info").find(class_="category-name").text,
-        "type": s.find(class_="info").find(class_="type-name").text,
-        "species": s.find(class_="info").findAll("div")[2].find("span").text,
-        "gender": s.find(class_="info").findAll("div")[3].find("span").text,
-        "views": int(s.find(class_="views").find(class_="font-large").text),
-        "favorites": int(s.find(class_="favorites").find(class_="font-large").text),
-        "rating": s.find(class_="rating-box").text.strip(),
-        "comments": [],
-    }
-    if config.submission_filter is True and check_filter(title) is True:
-        print(
-            f'{config.WARN_COLOR}"{title}" was filtered and will not be \
-downloaded - {data.get("url")}{config.END}'
-        )
-        return True
+    author = s.find(class_="submission-id-sub-container").find("a").find("strong").text
+    title = sanitize_filename(s.find(class_="submission-title").find("p").contents[0])
+    view_id = int(path.split("/")[-2:-1][0])
+
+    output = f"{config.output_folder}/{author}"
+    rating = s.find(class_="rating-box").text.strip()
+
+    if config.category != "gallery":
+        output = f"{config.output_folder}/{author}/{config.category}"
+    if config.folder is not None:
+        output = f"{config.output_folder}/{author}/{config.folder}"
+    os.makedirs(output, exist_ok=True)
+
+    output_path = f"{output}/{title} ({view_id}) - {filename}"
+    output_path_fb = f"{output}/{title} - {filename}"
+    if config.rating is True:
+        os.makedirs(f"{output}/{rating}", exist_ok=True)
+        output_path = f"{output}/{rating}/{title} ({view_id}) - {filename}"
+        output_path_fb = f"{output}/{rating}/{title} - {filename}"
+
+    if config.dont_redownload is True and os.path.isfile(output_path_fb):
+        return file_exists_fallback(author, title)
 
     image_url = f"https:{image}"
-    output = f"{config.output_folder}/{data.get('author')}"
-    if config.category != "gallery":
-        output = f"{config.output_folder}/{data.get('author')}/{config.category}"
-    if config.folder is not None:
-        output = f"{config.output_folder}/{data.get('author')}/{config.folder}"
-    os.makedirs(output, exist_ok=True)
-    filename = sanitize_filename(filename)
-    output_path = f"{output}/{title} - {filename}"
-    if config.rating is True:
-        os.makedirs(f'{output}/{data.get("rating")}', exist_ok=True)
-        output_path = f'{output}/{data.get("rating")}/{title} - {filename}'
-
-    if config.dont_redownload is True and os.path.isfile(output_path):
-        if config.check is True:
-            print(
-                f"{config.SUCCESS_COLOR}Downloaded all recent files of \"{data.get('author')}\"{config.END}"
-            )
-            raise download_complete
-        print(
-            f'{config.WARN_COLOR}Skipping "{title}" since it\'s already downloaded{config.END}'
-        )
-        return True
-    else:
-        download_file(
-            image_url,
-            output_path,
-            f'{title} - \
-[{data.get("rating")}]',
-        )
+    download_file(
+        image_url,
+        output_path,
+        f"{title} - \
+[{rating}]",
+    )
 
     if config.metadata is True:
+        dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
+        if config.json_description is True:
+            dsc = []
+        data = {
+            "id": view_id,
+            "filename": filename,
+            "author": author,
+            "date": s.find(class_="popup_date").attrs.get("title"),
+            "title": title,
+            "description": dsc,
+            "url": f"{config.BASE_URL}{path}",
+            "tags": [],
+            "category": s.find(class_="info").find(class_="category-name").text,
+            "type": s.find(class_="info").find(class_="type-name").text,
+            "species": s.find(class_="info").findAll("div")[2].find("span").text,
+            "gender": s.find(class_="info").findAll("div")[3].find("span").text,
+            "views": int(s.find(class_="views").find(class_="font-large").text),
+            "favorites": int(s.find(class_="favorites").find(class_="font-large").text),
+            "rating": rating,
+            "comments": [],
+        }
         create_metadata(output, data, s, title, filename)
     if config.download is not None:
-        print(f'{config.SUCCESS_COLOR}File saved as "{output_path}" {config.END}')
+        print(
+            f'{config.SUCCESS_COLOR}File saved as \
+"{output_path}" {config.END}'
+        )
+
     return True
+
 
 def download_file(url, fname, desc):
     try:
@@ -121,7 +120,8 @@ def download_file(url, fname, desc):
         os.remove(fname)
         exit()
     return True
-    
+
+
 def create_metadata(output, data, s, title, filename):
     if config.rating is True:
         os.makedirs(f'{output}/{data.get("rating")}/metadata', exist_ok=True)
@@ -164,3 +164,17 @@ def create_metadata(output, data, s, title, filename):
     # Write a UTF-8 encoded JSON file for metadata
     with open(f"{metadata}.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+
+def file_exists_fallback(author, title):
+    if config.check is True:
+        print(
+            f'fallback: {config.SUCCESS_COLOR}Downloaded all recent files of \
+"{author}"{config.END}'
+        )
+        raise download_complete
+    print(
+        f'fallback: {config.WARN_COLOR}Skipping "{title}" since \
+it\'s already downloaded{config.END}'
+    )
+    return True

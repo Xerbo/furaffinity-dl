@@ -72,7 +72,10 @@ parser.add_argument(
 Folder-Name-Here",
 )
 parser.add_argument(
-    "-s", "--start", default=1, help="page number to start from",
+    "-s",
+    "--start",
+    default=1,
+    help="page number to start from",
 )
 parser.add_argument(
     "-S",
@@ -115,7 +118,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--download",
-    help="download a specific submission /view/12345678/",
+    help="download a specific submission by providing its id",
 )
 parser.add_argument(
     "-jd",
@@ -129,6 +132,11 @@ parser.add_argument(
     action="store_true",
     help="extract furaffinity cookies directly from your browser",
 )
+parser.add_argument(
+    "--index",
+    action="store_true",
+    help="create an index of downloaded files in an output folder",
+)
 
 args = parser.parse_args()
 
@@ -136,7 +144,7 @@ args = parser.parse_args()
 username = args.username
 category = args.category
 
-if username != None:
+if username is not None:
     username = username.split(" ")
 
 # Custom input
@@ -153,6 +161,7 @@ folder = args.folder
 
 login = args.login
 check = args.check
+index = args.index
 submissions = args.submissions
 json_description = args.json_description
 metadata = args.metadata
@@ -168,3 +177,26 @@ END = "\033[0m"
 
 # Globals
 BASE_URL = "https://www.furaffinity.net"
+username_replace_chars = {
+    " ": "",
+    "_": "",
+}
+search = 'YCH[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN\
+|OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
+|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE\
+|CLOSE[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
+|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*ABLE\
+|AVAIL[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
+|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*CLONE\
+|CLONE[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
+|YCH[a-z $-/:-?{-~!"^_`\\[\\]]*LIM\
+|LIM[a-z $-/:-?{-~!"^_`\\[\\]]*YCH\
+|COM[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN\
+|OPEN[a-z $-/:-?{-~!"^_`\\[\\]]*COM\
+|COM[a-z $-/:-?{-~!"^_`\\[\\]]*CLOSE[^r]\
+|CLOSE[a-z $-/:-?{-~!"^_`\\[\\]]*COM\
+|FIX[a-z $-/:-?{-~!"^_`\\[\\]]*ICE\
+|TELEGRAM[a-z $-/:-?{-~!"^_`\\[\\]]*STICK\
+|TG[a-z $-/:-?{-~!"^_`\\[\\]]*STICK\
+|REM[insder]*\\b\
+|\\bREF|\\bSale|auction|multislot|stream|adopt'
