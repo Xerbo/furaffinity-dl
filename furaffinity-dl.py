@@ -69,7 +69,7 @@ downloaded - {config.BASE_URL}{img_url}{config.END}'
                     if config.check is True:
                         print(
                             f'{config.SUCCESS_COLOR}Downloaded all recent files of \
-"{config.username[0]}"{config.END}'
+"{username}"{config.END}'
                         )
                         raise download_complete
                     print(
@@ -164,11 +164,9 @@ or provide a file with usernames (1 username per line){config.END}"
         if username != "":
             print(f'{config.SUCCESS_COLOR}Now downloading "{username}"{config.END}')
             download_url = f"{config.BASE_URL}/{config.category}/{username}"
+            print(f"Downloading page {config.start} - {download_url}/{config.start}")
             main()
             print(
                 f'{config.SUCCESS_COLOR}Finished \
 downloading "{username}"{config.END}'
             )
-    if os.path.isfile(f"{config.output_folder}/index.idx"):
-        os.remove(f"{config.output_folder}/index.idx")
-    start_indexing(config.output_folder)

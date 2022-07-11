@@ -27,8 +27,15 @@ def download(path):
     # System messages
     if s.find(class_="notice-message") is not None:
         system_message_handler(s)
+    try:
+        image = s.find(class_="download").find("a").attrs.get("href")
+    except AttributeError:
+        print(
+            f"{config.ERROR_COLOR}uncessesful download of {config.BASE_URL}{path}{config.END}"
+        )
+        download(path)
+        return True
 
-    image = s.find(class_="download").find("a").attrs.get("href")
     filename = sanitize_filename(image.split("/")[-1:][0])
 
     author = s.find(class_="submission-id-sub-container").find("a").find("strong").text
@@ -51,7 +58,13 @@ def download(path):
         output_path = f"{output}/{rating}/{title} ({view_id}) - {filename}"
         output_path_fb = f"{output}/{rating}/{title} - {filename}"
 
-    if config.dont_redownload is True and os.path.isfile(output_path_fb):
+    if config.dont_redownload is True and (
+        os.path.isfile(output_path_fb) or os.path.isfile(output_path)
+    ):
+        with open(
+            f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+"
+        ) as idx:
+            idx.write(f"({view_id})\n")
         return file_exists_fallback(author, title)
 
     image_url = f"https:{image}"
@@ -61,6 +74,9 @@ def download(path):
         f"{title} - \
 [{rating}]",
     )
+
+    with open(f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+") as idx:
+        idx.write(f"({view_id})\n")
 
     if config.metadata is True:
         dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")

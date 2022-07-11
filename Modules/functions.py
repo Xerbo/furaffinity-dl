@@ -135,7 +135,7 @@ def next_button(page_url):
         next_button = s.find("a", class_="button standard right", text="Next")
         page_num = fav_next_button(s)
     print(
-        f"Downloading page {page_num} - {config.BASE_URL}/{next_button.parent.attrs['action']}"
+        f"Downloading page {page_num} - {config.BASE_URL}{next_button.parent.attrs['action']}"
     )
     return page_num
 
