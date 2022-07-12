@@ -20,8 +20,9 @@ if config.cookies is not None:  # add cookies if present
 
 
 def download(path):
-
-    response = requests_retry_session(session=session).get(f"{config.BASE_URL}{path}")
+    response = requests_retry_session(session=session).get(
+        f"{config.BASE_URL}{path}"
+    )
     s = BeautifulSoup(response.text, "html.parser")
 
     # System messages
@@ -38,8 +39,12 @@ def download(path):
 
     filename = sanitize_filename(image.split("/")[-1:][0])
 
-    author = s.find(class_="submission-id-sub-container").find("a").find("strong").text
-    title = sanitize_filename(s.find(class_="submission-title").find("p").contents[0])
+    author = (
+        s.find(class_="submission-id-sub-container").find("a").find("strong").text
+    )
+    title = sanitize_filename(
+        s.find(class_="submission-title").find("p").contents[0]
+    )
     view_id = int(path.split("/")[-2:-1][0])
 
     output = f"{config.output_folder}/{author}"
@@ -61,25 +66,22 @@ def download(path):
     if config.dont_redownload is True and (
         os.path.isfile(output_path_fb) or os.path.isfile(output_path)
     ):
+        return file_exists_fallback(author, title, view_id)
+
+    image_url = f"https:{image}"
+
+    if download_file(image_url, output_path, f"{title} - [{rating}]") is True:
         with open(
             f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+"
         ) as idx:
             idx.write(f"({view_id})\n")
-        return file_exists_fallback(author, title)
-
-    image_url = f"https:{image}"
-    download_file(
-        image_url,
-        output_path,
-        f"{title} - \
-[{rating}]",
-    )
-
-    with open(f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+") as idx:
-        idx.write(f"({view_id})\n")
 
     if config.metadata is True:
-        dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
+        dsc = (
+            s.find(class_="submission-description")
+            .text.strip()
+            .replace("\r\n", "\n")
+        )
         if config.json_description is True:
             dsc = []
         data = {
@@ -96,7 +98,9 @@ def download(path):
             "species": s.find(class_="info").findAll("div")[2].find("span").text,
             "gender": s.find(class_="info").findAll("div")[3].find("span").text,
             "views": int(s.find(class_="views").find(class_="font-large").text),
-            "favorites": int(s.find(class_="favorites").find(class_="font-large").text),
+            "favorites": int(
+                s.find(class_="favorites").find(class_="font-large").text
+            ),
             "rating": rating,
             "comments": [],
         }
@@ -182,7 +186,9 @@ def create_metadata(output, data, s, title, filename):
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 
-def file_exists_fallback(author, title):
+def file_exists_fallback(author, title, view_id):
+    with open(f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+") as idx:
+        idx.write(f"({view_id})\n")
     if config.check is True:
         print(
             f'fallback: {config.SUCCESS_COLOR}Downloaded all recent files of \

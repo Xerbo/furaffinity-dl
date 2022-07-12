@@ -5,6 +5,7 @@ from pathlib import Path
 
 import Modules.config as config
 
+
 @lru_cache(maxsize=None)
 def start_indexing(path, layer=0):
 
@@ -19,15 +20,16 @@ def start_indexing(path, layer=0):
         # iter the directory
         for p in path.iterdir():
 
-            name = p.stem
             if p.is_file():
-                fname = re.search(r"\([0-9]{5,}\)", name)
-                if fname is None and name != "index":
+                name = p.stem
+                ext = p.suffix
+                match = re.search(r"\([0-9]{5,}\)", name)
+                if match is None and ext not in [".txt", ".idx"]:
                     return
 
-                if match := re.search(r"\([0-9]{5,}\)", name):
+                if match:
                     idx.write(f"{match[0]}\n")
-                    print(f"found: {p} by {match[0]}")
+                    print(f"found: {p}")
 
             elif p.is_dir():
                 start_indexing(p, layer + 1)

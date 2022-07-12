@@ -64,12 +64,19 @@ def system_message_handler(s):
             .text.strip()
         }
     except AttributeError:
-        message = (
-            s.find("section", class_="aligncenter notice-message")
-            .find("div", class_="section-body alignleft")
-            .find("div", class_="redirect-message")
-            .text.strip()
-        )
+        try:
+            message = (
+                s.find("section", class_="aligncenter notice-message")
+                .find("div", class_="section-body alignleft")
+                .find("div", class_="redirect-message")
+                .text.strip()
+            )
+        except AttributeError:
+            message = (
+                s.find("section", class_="aligncenter notice-message")
+                .find("div", class_="section-body alignleft")
+                .text.strip()
+            )
     print(f"{config.WARN_COLOR}System Message: {message}{config.END}")
     raise download_complete
 
