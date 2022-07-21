@@ -9,8 +9,8 @@ import Modules.config as config
 @lru_cache(maxsize=None)
 def start_indexing(path, layer=0):
 
-    """Recursively iterate over each item in path
-    and print item's name.
+    """Recursively iterate over each item in path, then
+    save and print item's name.
     """
 
     # make Path object from input string
@@ -23,7 +23,7 @@ def start_indexing(path, layer=0):
             if p.is_file():
                 name = p.stem
                 ext = p.suffix
-                match = re.search(r"\([0-9]{5,}\)", name)
+                match = re.search(r"\(\d{5,}\)", name)
                 if match is None and ext not in [".txt", ".idx"]:
                     return
 
@@ -39,6 +39,7 @@ def start_indexing(path, layer=0):
 
 @lru_cache(maxsize=None)
 def check_file(path):
+    """compare file view id with index list"""
     view_id = path.split("/")[-2:-1][0]
     with contextlib.suppress(FileNotFoundError):
         with open(f"{config.output_folder}/index.idx", encoding="utf-8") as idx:

@@ -1,28 +1,18 @@
-import http.cookiejar as cookielib
 import json
 import os
 
-import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from tqdm import tqdm
 
 import Modules.config as config
-from Modules.functions import download_complete
+from Modules.functions import DownloadComplete
 from Modules.functions import requests_retry_session
 from Modules.functions import system_message_handler
 
-session = requests.session()
-if config.cookies is not None:  # add cookies if present
-    cookies = cookielib.MozillaCookieJar(config.cookies)
-    cookies.load()
-    session.cookies = cookies
-
 
 def download(path):
-    response = requests_retry_session(session=session).get(
-        f"{config.BASE_URL}{path}"
-    )
+    response = requests_retry_session().get(f"{config.BASE_URL}{path}")
     s = BeautifulSoup(response.text, "html.parser")
 
     # System messages
@@ -32,7 +22,7 @@ def download(path):
         image = s.find(class_="download").find("a").attrs.get("href")
     except AttributeError:
         print(
-            f"{config.ERROR_COLOR}uncessesful download of {config.BASE_URL}{path}{config.END}"
+            f"{config.ERROR_COLOR}unsuccessful download of {config.BASE_URL}{path}{config.END}"
         )
         download(path)
         return True
@@ -40,10 +30,14 @@ def download(path):
     filename = sanitize_filename(image.split("/")[-1:][0])
 
     author = (
-        s.find(class_="submission-id-sub-container").find("a").find("strong").text
+        s.find(class_="submission-id-sub-container")
+        .find("a")
+        .find("strong")
+        .text.replace(".", "._")
     )
+
     title = sanitize_filename(
-        s.find(class_="submission-title").find("p").contents[0]
+        str(s.find(class_="submission-title").find("p").contents[0])
     )
     view_id = int(path.split("/")[-2:-1][0])
 
@@ -70,18 +64,19 @@ def download(path):
 
     image_url = f"https:{image}"
 
-    if download_file(image_url, output_path, f"{title} - [{rating}]") is True:
+    if (
+        download_file(
+            image_url, f"{config.BASE_URL}{path}", output_path, f"{title} - [{rating}]"
+        )
+        is True
+    ):
         with open(
             f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+"
         ) as idx:
             idx.write(f"({view_id})\n")
 
     if config.metadata is True:
-        dsc = (
-            s.find(class_="submission-description")
-            .text.strip()
-            .replace("\r\n", "\n")
-        )
+        dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
         if config.json_description is True:
             dsc = []
         data = {
@@ -98,9 +93,7 @@ def download(path):
             "species": s.find(class_="info").findAll("div")[2].find("span").text,
             "gender": s.find(class_="info").findAll("div")[3].find("span").text,
             "views": int(s.find(class_="views").find(class_="font-large").text),
-            "favorites": int(
-                s.find(class_="favorites").find(class_="font-large").text
-            ),
+            "favorites": int(s.find(class_="favorites").find(class_="font-large").text),
             "rating": rating,
             "comments": [],
         }
@@ -114,17 +107,17 @@ def download(path):
     return True
 
 
-def download_file(url, fname, desc):
+def download_file(url, view_url, file_name, desc):
     try:
-        r = session.get(url, stream=True)
+        r = requests_retry_session().get(url, stream=True)
         if r.status_code != 200:
             print(
                 f'{config.ERROR_COLOR}Got a HTTP {r.status_code} while downloading \
-"{fname}". URL {url} ...skipping{config.END}'
+"{file_name}" ({view_url}) ...skipping{config.END}'
             )
             return False
         total = int(r.headers.get("Content-Length", 0))
-        with open(fname, "wb") as file, tqdm(
+        with open(file_name, "wb") as file, tqdm(
             desc=desc.ljust(40),
             total=total,
             miniters=100,
@@ -137,7 +130,7 @@ def download_file(url, fname, desc):
                 bar.update(size)
     except KeyboardInterrupt:
         print(f"{config.SUCCESS_COLOR}Finished downloading{config.END}")
-        os.remove(fname)
+        os.remove(file_name)
         exit()
     return True
 
@@ -155,7 +148,7 @@ def create_metadata(output, data, s, title, filename):
         for desc in s.find("div", class_="submission-description").stripped_strings:
             data["description"].append(desc)
 
-    # Extact tags
+    # Extract tags
 
     try:
         for tag in s.find(class_="tags-row").findAll(class_="tags"):
@@ -194,7 +187,7 @@ def file_exists_fallback(author, title, view_id):
             f'fallback: {config.SUCCESS_COLOR}Downloaded all recent files of \
 "{author}"{config.END}'
         )
-        raise download_complete
+        raise DownloadComplete
     print(
         f'fallback: {config.WARN_COLOR}Skipping "{title}" since \
 it\'s already downloaded{config.END}'

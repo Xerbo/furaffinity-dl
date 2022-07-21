@@ -9,14 +9,6 @@ from urllib3.util import Retry
 
 import Modules.config as config
 
-session = requests.session()
-if config.cookies is not None:  # add cookies if present
-    cookies = cookielib.MozillaCookieJar(config.cookies)
-    cookies.load()
-    session.cookies = cookies
-
-session.headers.update({"User-Agent": config.user_agent})
-
 
 def requests_retry_session(
     retries=3,
@@ -24,7 +16,13 @@ def requests_retry_session(
     status_forcelist=(500, 502, 504, 104),
     session=None,
 ):
+    """Get a session, and retry in case of an error"""
     session = session or requests.Session()
+    if config.cookies is not None:  # add cookies if present
+        cookies = cookielib.MozillaCookieJar(config.cookies)
+        cookies.load()
+        session.cookies = cookies
+    session.headers.update({"User-Agent": config.user_agent})
     retry = Retry(
         total=retries,
         read=retries,
@@ -38,11 +36,12 @@ def requests_retry_session(
     return session
 
 
-class download_complete(Exception):
+class DownloadComplete(Exception):
     pass
 
 
 def check_filter(title):
+    """Compare post title and search string, then return 'True' if match found"""
 
     match = re.search(
         config.search,
@@ -56,6 +55,7 @@ def check_filter(title):
 
 
 def system_message_handler(s):
+    """Parse and return system message text"""
     try:
         message = {
             s.find(class_="notice-message")
@@ -78,18 +78,19 @@ def system_message_handler(s):
                 .text.strip()
             )
     print(f"{config.WARN_COLOR}System Message: {message}{config.END}")
-    raise download_complete
+    raise DownloadComplete
 
 
 def login():
+    """Get cookies from any browser with logged in furaffinity and save them to file"""
+    session = requests.Session()
+    cj = browser_cookie3.load()
 
-    CJ = browser_cookie3.load()
+    response = session.get(config.BASE_URL, cookies=cj)
+    fa_cookies = cj._cookies[".furaffinity.net"]["/"]
 
-    response = session.get(config.BASE_URL, cookies=CJ)
-    FA_COOKIES = CJ._cookies[".furaffinity.net"]["/"]
-
-    cookie_a = FA_COOKIES["a"]
-    cookie_b = FA_COOKIES["b"]
+    cookie_a = fa_cookies["a"]
+    cookie_b = fa_cookies["b"]
 
     s = BeautifulSoup(response.text, "html.parser")
     try:
@@ -116,48 +117,51 @@ furaffinity in your browser, or you can export cookies.txt manually{config.END}"
 
 
 def next_button(page_url):
-    response = session.get(page_url)
+    """Parse Next button and get next page url"""
+    response = requests_retry_session().get(page_url)
     s = BeautifulSoup(response.text, "html.parser")
     if config.submissions is True:
         # unlike galleries that are sequentially numbered, submissions use a different scheme.
         # the "page_num" is instead: new~[set of numbers]@(12 or 48 or 72) if sorting by new
         try:
-            next_button = s.find("a", class_="button standard more").attrs.get("href")
+            parse_next_button = s.find("a", class_="button standard more").attrs.get(
+                "href"
+            )
         except AttributeError:
             try:
-                next_button = s.find("a", class_="button standard more-half").attrs.get(
-                    "href"
-                )
+                parse_next_button = s.find(
+                    "a", class_="button standard more-half"
+                ).attrs.get("href")
             except AttributeError as e:
                 print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
-                raise download_complete from e
-        page_num = next_button.split("/")[-2]
+                raise DownloadComplete from e
+        page_num = parse_next_button.split("/")[-2]
     elif config.category != "favorites":
-        next_button = s.find("button", class_="button standard", text="Next")
-        if next_button is None or next_button.parent is None:
+        parse_next_button = s.find("button", class_="button standard", text="Next")
+        if parse_next_button is None or parse_next_button.parent is None:
             print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
-            raise download_complete
-        page_num = next_button.parent.attrs["action"].split("/")[-2]
+            raise DownloadComplete
+        page_num = parse_next_button.parent.attrs["action"].split("/")[-2]
     else:
-        next_button = s.find("a", class_="button standard right", text="Next")
-        page_num = fav_next_button(s)
+        parse_next_button = s.find("a", class_="button standard right", text="Next")
+        page_num = fav_next_button(parse_next_button)
     print(
-        f"Downloading page {page_num} - {config.BASE_URL}{next_button.parent.attrs['action']}"
+        f"Downloading page {page_num} - {config.BASE_URL}{parse_next_button.parent.attrs['action']}"
     )
     return page_num
 
 
-def fav_next_button():
+def fav_next_button(parse_next_button):
     # unlike galleries that are sequentially numbered, favorites use a different scheme.
     # the "page_num" is instead: [set of numbers]/next (the trailing /next is required)
-    if next_button is None:
+    if parse_next_button is None:
         print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
-        raise download_complete
-    next_page_link = next_button.attrs["href"]
+        raise DownloadComplete
+    next_page_link = parse_next_button.attrs["href"]
     next_fav_num = re.search(r"\d+", next_page_link)
 
     if next_fav_num is None:
         print(f"{config.WARN_COLOR}Failed to parse next favorite link{config.END}")
-        raise download_complete
+        raise DownloadComplete
 
     return f"{next_fav_num[0]}/next"

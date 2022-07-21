@@ -1,16 +1,14 @@
 #!/usr/bin/python3
 import contextlib
-import http.cookiejar as cookielib
 import os
 from time import sleep
 
-import requests
 from bs4 import BeautifulSoup
 
 import Modules.config as config
 from Modules.download import download
 from Modules.functions import check_filter
-from Modules.functions import download_complete
+from Modules.functions import DownloadComplete
 from Modules.functions import login
 from Modules.functions import next_button
 from Modules.functions import requests_retry_session
@@ -18,20 +16,11 @@ from Modules.functions import system_message_handler
 from Modules.index import check_file
 from Modules.index import start_indexing
 
-# get session
-session = requests.session()
-session.headers.update({"User-Agent": config.user_agent})
-
-if config.cookies is not None:  # add cookies if present
-    cookies = cookielib.MozillaCookieJar(config.cookies)
-    cookies.load()
-    session.cookies = cookies
-
 
 def main():
-    # download loop
+    """loop over and download all images on the page(s)"""
     page_num = config.start
-    with contextlib.suppress(download_complete):
+    with contextlib.suppress(DownloadComplete):
         while True:
             if config.stop == page_num:
                 print(
@@ -41,7 +30,7 @@ stopping.{config.END}'
                 break
 
             page_url = f"{download_url}/{page_num}"
-            response = requests_retry_session(session=session).get(page_url)
+            response = requests_retry_session().get(page_url)
             s = BeautifulSoup(response.text, "html.parser")
 
             # System messages
@@ -71,7 +60,7 @@ downloaded - {config.BASE_URL}{img_url}{config.END}'
                             f'{config.SUCCESS_COLOR}Downloaded all recent files of \
 "{username}"{config.END}'
                         )
-                        raise download_complete
+                        raise DownloadComplete
                     print(
                         f'{config.WARN_COLOR}Skipping "{title}" since \
 it\'s already downloaded{config.END}'
@@ -96,15 +85,12 @@ if __name__ == "__main__":
         print(f"{config.SUCCESS_COLOR}indexing finished{config.END}")
         exit()
 
-    try:
-        response = requests_retry_session(session=session).get(config.BASE_URL)
-    except KeyboardInterrupt:
-        print(f"{config.WARN_COLOR}Aborted by user{config.END}")
-        exit()
-
-    s = BeautifulSoup(response.text, "html.parser")
-    if s.find(class_="loggedin_user_avatar") is not None:
-        account_username = s.find(class_="loggedin_user_avatar").attrs.get("alt")
+    one_time_response = requests_retry_session().get(config.BASE_URL)
+    one_time_s = BeautifulSoup(one_time_response.text, "html.parser")
+    if one_time_s.find(class_="loggedin_user_avatar") is not None:
+        account_username = one_time_s.find(class_="loggedin_user_avatar").attrs.get(
+            "alt"
+        )
         print(
             f'{config.SUCCESS_COLOR}Logged in as \
 "{account_username}"{config.END}'
@@ -143,17 +129,6 @@ downloading "{config.folder[1]}"{config.END}'
     if config.category not in ["gallery", "scraps", "favorites"]:
         print(
             f"{config.ERROR_COLOR}Please enter a valid category [gallery/scraps/favorites] {config.END}"
-        )
-        exit()
-
-    try:
-        if os.path.exists(config.username[0]):
-            data = open(config.username[0]).read()
-            config.username = filter(None, data.split("\n"))
-    except TypeError or AttributeError:
-        print(
-            f"{config.ERROR_COLOR}Please enter a username \
-or provide a file with usernames (1 username per line){config.END}"
         )
         exit()
 

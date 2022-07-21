@@ -11,7 +11,9 @@ cookies.txt
 # Default download folder
 Submissions/
 
-# vscode stuff
-.vscode
+#Dev stuff
 list.txt
+.vscode
+.idea
+venv
 __pycache__

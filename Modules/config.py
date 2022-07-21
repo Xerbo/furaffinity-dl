@@ -1,4 +1,5 @@
 import argparse
+import os
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter,
@@ -28,7 +29,8 @@ parser.add_argument(
     "username",
     nargs="?",
     help="username of the furaffinity \
-user",
+user (if username is starting with '-' or '--' \
+provide them through a file instead)",
 )
 parser.add_argument(
     "category",
@@ -36,14 +38,16 @@ parser.add_argument(
     help="the category to download, gallery/scraps/favorites \
 [default: gallery]",
     default="gallery",
+    type=str,
 )
-parser.add_argument("-c", "--cookies", help="path to a NetScape cookies file")
+parser.add_argument("--cookies", "-c", help="path to a NetScape cookies file", type=str)
 parser.add_argument(
     "--output",
     "-o",
     dest="output_folder",
     default="Submissions",
     help="set a custom output folder",
+    type=str,
 )
 parser.add_argument(
     "--check",
@@ -51,56 +55,53 @@ parser.add_argument(
     help="check and download latest submissions of a user",
 )
 parser.add_argument(
-    "-ua",
     "--user-agent",
+    "-ua",
     dest="user_agent",
     default="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:101.0) Gecko/20100101 \
 Firefox/101.0",
-    help="Your browser's useragent, may be required, depending on your luck",
+    help="Your browser's user agent, may be required, depending on your luck",
+    type=str,
 )
 parser.add_argument(
-    "-sub",
     "--submissions",
+    "-sub",
     action="store_true",
     help="download your \
 submissions",
 )
 parser.add_argument(
-    "-f",
     "--folder",
+    "-f",
     help="full path of the furaffinity gallery folder. for instance 123456/\
 Folder-Name-Here",
+    type=str,
 )
+parser.add_argument("--start", default=1, help="page number to start from", type=str)
 parser.add_argument(
-    "-s",
-    "--start",
-    default=1,
-    help="page number to start from",
-)
-parser.add_argument(
-    "-S",
     "--stop",
     default=0,
     help="Page number to stop on. Specify the full URL after the username: for \
 favorites pages (1234567890/next) or for submissions pages: \
 (new~123456789@48)",
+    type=str,
 )
 parser.add_argument(
-    "-rd",
     "--redownload",
+    "-rd",
     action="store_false",
     help="Redownload files that have been downloaded already",
 )
 parser.add_argument(
-    "-i",
     "--interval",
-    type=int,
+    "-i",
     default=0,
     help="delay between downloading pages in seconds [default: 0]",
+    type=int,
 )
 parser.add_argument(
-    "-r",
     "--rating",
+    "-r",
     action="store_false",
     help="disable rating separation",
 )
@@ -111,18 +112,17 @@ parser.add_argument(
     help="enable submission filter",
 )
 parser.add_argument(
-    "-m",
     "--metadata",
+    "-m",
     action="store_true",
     help="enable metadata saving",
 )
 parser.add_argument(
-    "--download",
-    help="download a specific submission by providing its id",
+    "--download", help="download a specific submission by providing its id", type=str
 )
 parser.add_argument(
-    "-jd",
     "--json-description",
+    "-jd",
     dest="json_description",
     action="store_true",
     help="download description as a JSON list",
@@ -146,6 +146,10 @@ category = args.category
 
 if username is not None:
     username = username.split(" ")
+
+    if os.path.exists(username[0]):
+        data = open(username[0]).read()
+        username = filter(None, data.split("\n"))
 
 # Custom input
 cookies = args.cookies
@@ -199,4 +203,4 @@ search = 'YCH[a-z $-/:-?{-~!"^_`\\[\\]]*OPEN\
 |TELEGRAM[a-z $-/:-?{-~!"^_`\\[\\]]*STICK\
 |TG[a-z $-/:-?{-~!"^_`\\[\\]]*STICK\
 |REM[insder]*\\b\
-|\\bREF|\\bSale|auction|multislot|stream|adopt'
+|\\bREF|\\bSale|auction|multislot|multi slot|stream|adopt'
