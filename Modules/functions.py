@@ -145,8 +145,10 @@ def next_button(page_url):
     else:
         parse_next_button = s.find("a", class_="button standard right", text="Next")
         page_num = fav_next_button(parse_next_button)
+    next_page_url = (parse_next_button.parent.attrs['action'] if 'action'
+                    in parse_next_button.parent.attrs else parse_next_button.attrs['href'])
     print(
-        f"Downloading page {page_num} - {config.BASE_URL}{parse_next_button.parent.attrs['action']}"
+        f"Downloading page {page_num} - {config.BASE_URL}{next_page_url}"
     )
     return page_num
 
