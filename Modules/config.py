@@ -132,7 +132,7 @@ parser.add_argument(
     "-hd",
     dest="html_description",
     action="store_true",
-    help="save description in original html format",
+    help="download description as original html format, this won't work if json-description is enabled",
 )
 parser.add_argument(
     "--login",
