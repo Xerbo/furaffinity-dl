@@ -76,7 +76,10 @@ def download(path):
             idx.write(f"({view_id})\n")
 
     if config.metadata is True:
-        dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
+        if config.html_description is True:
+            dsc = s.find(class_="submission-description").prettify()
+        else:
+            dsc = s.find(class_="submission-description").text.strip().replace("\r\n", "\n")
         if config.json_description is True:
             dsc = []
         data = {

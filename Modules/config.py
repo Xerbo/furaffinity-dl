@@ -128,6 +128,13 @@ parser.add_argument(
     help="download description as a JSON list",
 )
 parser.add_argument(
+    "--html-description",
+    "-hd",
+    dest="html_description",
+    action="store_true",
+    help="download description as original html format, this won't work if json-description is enabled",
+)
+parser.add_argument(
     "--login",
     action="store_true",
     help="extract furaffinity cookies directly from your browser",
@@ -167,6 +174,7 @@ login = args.login
 check = args.check
 index = args.index
 submissions = args.submissions
+html_description = args.html_description
 json_description = args.json_description
 metadata = args.metadata
 dont_redownload = args.redownload

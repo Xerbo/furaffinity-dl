@@ -54,6 +54,8 @@ options:
   --filter              enable submission filter
   --metadata, -m        enable metadata saving
   --download DOWNLOAD   download a specific submission by providing its id
+  --html-description, -hd
+                        download description as original html format, this won't work if json-description is enabled
   --json-description, -jd
                         download description as a JSON list
   --login               extract furaffinity cookies directly from your browser
