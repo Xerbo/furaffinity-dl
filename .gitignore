@@ -7,3 +7,13 @@ cookies.txt
 *.json
 *.gif
 *.swf
+
+# Default download folder
+Submissions/
+
+#Dev stuff
+list.txt
+.vscode
+.idea
+venv
+__pycache__

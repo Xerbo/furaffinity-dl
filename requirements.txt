@@ -1,3 +1,7 @@
-beautifulsoup4
+urllib3
 requests
+beautifulsoup4
 tqdm
+pathvalidate
+pre-commit
+browser-cookie3
