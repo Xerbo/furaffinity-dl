@@ -224,7 +224,7 @@ while True:
         # the "page_num" is instead: [set of numbers]/next (the trailing /next is required)
         
         next_page_link = next_button.attrs['href']
-        next_fav_num = re.search(r'\d+', next_page_link)
+        next_fav_num = re.search(r'\/\d+', next_page_link)
 
         if next_fav_num == None:
             print('Failed to parse next favorite link.')
