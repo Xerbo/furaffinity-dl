@@ -176,7 +176,8 @@ def get_content_length(url):
                 return 0
             content_length = r.headers.get("Content-Length", 0)
             return int(content_length)
-    except Exception:
+    except Exception as e:
+        print(f'{config.ERROR_COLOR}Can not get content length for {url}...{config.END}')
         pass
     return 0
 
