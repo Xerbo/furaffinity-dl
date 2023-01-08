@@ -40,6 +40,8 @@ def start_indexing(path, layer=0):
 @lru_cache(maxsize=None)
 def check_file(path):
     """compare file view id with index list"""
+    if config.check_file_size:
+        return False
     view_id = path.split("/")[-2:-1][0]
     with contextlib.suppress(FileNotFoundError):
         with open(f"{config.output_folder}/index.idx", encoding="utf-8") as idx:

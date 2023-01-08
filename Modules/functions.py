@@ -18,6 +18,8 @@ def requests_retry_session(
 ):
     """Get a session, and retry in case of an error"""
     session = session or requests.Session()
+    if not config.request_compress:
+        session.headers.update({'Accept-Encoding': 'identity'})
     if config.cookies is not None:  # add cookies if present
         cookies = cookielib.MozillaCookieJar(config.cookies)
         cookies.load()
