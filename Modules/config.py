@@ -144,6 +144,25 @@ parser.add_argument(
     action="store_true",
     help="create an index of downloaded files in an output folder",
 )
+parser.add_argument(
+    "--real-category",
+    dest="real_category",
+    action="store_true",
+    help="this will download to the sub folder of its real category. it's useful when download favorites to avoid duplicate files",
+)
+parser.add_argument(
+    "--request-compress",
+    dest="request_compress",
+    action="store_true",
+    help="enable request compress which may save some bandwidth, but less file can be check by content-length. " +
+            "Since images won't be compress by default, it won't take much side effect to disable it by default",
+)
+parser.add_argument(
+    "--check-file-size",
+    dest="check_file_size",
+    action="store_true",
+    help="check all files size when download, this will skip build-in archive",
+)
 
 args = parser.parse_args()
 
@@ -180,6 +199,14 @@ metadata = args.metadata
 dont_redownload = args.redownload
 rating = args.rating
 submission_filter = args.submission_filter
+real_category = args.real_category
+request_compress = args.request_compress
+check_file_size = args.check_file_size
+
+if check_file_size:
+    request_compress = False
+    index = False
+
 
 # Colors
 SUCCESS_COLOR = "\033[1;92m"

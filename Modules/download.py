@@ -11,21 +11,26 @@ from Modules.functions import requests_retry_session
 from Modules.functions import system_message_handler
 
 
-def download(path):
-    response = requests_retry_session().get(f"{config.BASE_URL}{path}")
-    s = BeautifulSoup(response.text, "html.parser")
-
-    # System messages
-    if s.find(class_="notice-message") is not None:
-        system_message_handler(s)
+def download(path, max_retries=5):
+    if max_retries < 0:
+        return False
     try:
+        response = requests_retry_session().get(f"{config.BASE_URL}{path}")
+
+        s = BeautifulSoup(response.text, "html.parser")
+        
+        # System messages
+        if s.find(class_="notice-message") is not None:
+            system_message_handler(s)
         image = s.find(class_="download").find("a").attrs.get("href")
     except AttributeError:
         print(
-            f"{config.ERROR_COLOR}unsuccessful download of {config.BASE_URL}{path}{config.END}"
+            f"{config.ERROR_COLOR}unsuccessful download of {config.BASE_URL}{path} remains retries {max_retries}{config.END}"
         )
-        download(path)
-        return True
+        return download(path, max_retries - 1)
+    except Exception as e:
+        print(f"{config.ERROR_COLOR}exception when download {config.BASE_URL}{path} remains retries {max_retries}, error {e}{config.END}")
+        return download(path, max_retries - 1)
 
     filename = sanitize_filename(image.split("/")[-1:][0])
 
@@ -44,10 +49,14 @@ def download(path):
     output = f"{config.output_folder}/{author}"
     rating = s.find(class_="rating-box").text.strip()
 
-    if config.category != "gallery":
-        output = f"{config.output_folder}/{author}/{config.category}"
-    if config.folder is not None:
-        output = f"{config.output_folder}/{author}/{config.folder}"
+    if config.real_category:
+        real_category = get_image_cateory(s)
+        output = f"{config.output_folder}/{author}/{real_category}"
+    else: 
+        if config.category != "gallery":
+            output = f"{config.output_folder}/{author}/{config.category}"
+        if config.folder is not None:
+            output = f"{config.output_folder}/{author}/{config.folder}"
     os.makedirs(output, exist_ok=True)
 
     output_path = f"{output}/{title} ({view_id}) - {filename}"
@@ -57,12 +66,20 @@ def download(path):
         output_path = f"{output}/{rating}/{title} ({view_id}) - {filename}"
         output_path_fb = f"{output}/{rating}/{title} - {filename}"
 
+    image_url = f"https:{image}"
+
+    if config.check_file_size and (
+        os.path.isfile(output_path_fb) or os.path.isfile(output_path)
+    ):
+        content_length = get_content_length(image_url)
+        delete_file_if_mismatch_size(output_path_fb, content_length)
+        delete_file_if_mismatch_size(output_path, content_length)
+
+
     if config.dont_redownload is True and (
         os.path.isfile(output_path_fb) or os.path.isfile(output_path)
     ):
         return file_exists_fallback(author, title, view_id)
-
-    image_url = f"https:{image}"
 
     if (
         download_file(
@@ -74,6 +91,8 @@ def download(path):
             f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+"
         ) as idx:
             idx.write(f"({view_id})\n")
+    else:
+        return download(path, max_retries - 1)
 
     if config.metadata is True:
         if config.html_description is True:
@@ -120,6 +139,7 @@ def download_file(url, view_url, file_name, desc):
             )
             return False
         total = int(r.headers.get("Content-Length", 0))
+        encoding = r.headers.get('Content-Encoding', '')
         with open(file_name, "wb") as file, tqdm(
             desc=desc.ljust(40),
             total=total,
@@ -135,8 +155,43 @@ def download_file(url, view_url, file_name, desc):
         print(f"{config.SUCCESS_COLOR}Finished downloading{config.END}")
         os.remove(file_name)
         exit()
+    except Exception as e:
+        os.remove(file_name)
+        print(f"{config.ERROR_COLOR}Download {file_name} ({view_url}) failed, error {e}. Remove file...{config.END}")
+        return False
+
+    # if webserver doesn't compress file, we should check file size
+    if len(encoding) == 0 and delete_file_if_mismatch_size(file_name, total):
+        return False
     return True
 
+def get_content_length(url):
+    try:
+        with requests_retry_session().get(url, stream=True) as r:
+            if r.status_code != 200:
+                print(
+                    f'{config.ERROR_COLOR}Got a HTTP {r.status_code} while get content length \
+    "{url}" ...return 0{config.END}'
+                )
+                return 0
+            content_length = r.headers.get("Content-Length", 0)
+            return int(content_length)
+    except Exception as e:
+        print(f'{config.ERROR_COLOR}Can not get content length for {url}...{config.END}')
+        pass
+    return 0
+
+def delete_file_if_mismatch_size(path, target_size):
+    if type(target_size) != int:
+        target_size = int(target_size)
+    if target_size <= 0 or not os.path.isfile(path):
+        return False
+    file_size = os.path.getsize(path)
+    if file_size != target_size:
+        print(f"{config.ERROR_COLOR}File size {file_size}b mismatch {target_size}b: delete file {path}{config.END}")
+        os.remove(path)
+        return True
+    return False
 
 def create_metadata(output, data, s, title, filename):
     if config.rating is True:
@@ -183,8 +238,10 @@ def create_metadata(output, data, s, title, filename):
 
 
 def file_exists_fallback(author, title, view_id):
-    with open(f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+") as idx:
-        idx.write(f"({view_id})\n")
+    # do not write to index when check file size is enabled
+    if not config.check_file_size:
+        with open(f"{config.output_folder}/index.idx", encoding="utf-8", mode="a+") as idx:
+            idx.write(f"({view_id})\n")
     if config.check is True:
         print(
             f'fallback: {config.SUCCESS_COLOR}Downloaded all recent files of \
@@ -196,3 +253,10 @@ def file_exists_fallback(author, title, view_id):
 it\'s already downloaded{config.END}'
     )
     return True
+
+def get_image_cateory(s):
+    if s.find(class_ = 'button standard mobile-fix', string = 'Main Gallery') is not None:
+        return 'gallery'
+    elif s.find(class_='button standard mobile-fix', string = 'Scraps') is not None:
+        return 'scraps'
+    return 'unknown'

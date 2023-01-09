@@ -18,6 +18,8 @@ def requests_retry_session(
 ):
     """Get a session, and retry in case of an error"""
     session = session or requests.Session()
+    if not config.request_compress:
+        session.headers.update({'Accept-Encoding': 'identity'})
     if config.cookies is not None:  # add cookies if present
         cookies = cookielib.MozillaCookieJar(config.cookies)
         cookies.load()
@@ -160,10 +162,10 @@ def fav_next_button(parse_next_button):
         print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
         raise DownloadComplete
     next_page_link = parse_next_button.attrs["href"]
-    next_fav_num = re.search(r"\d+", next_page_link)
+    next_fav_num = re.findall(r"\d+", next_page_link)
 
-    if next_fav_num is None:
+    if len(next_fav_num) <= 0:
         print(f"{config.WARN_COLOR}Failed to parse next favorite link{config.END}")
         raise DownloadComplete
 
-    return f"{next_fav_num[0]}/next"
+    return f"{next_fav_num[-1]}/next"

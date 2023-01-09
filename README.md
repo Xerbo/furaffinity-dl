@@ -58,8 +58,13 @@ options:
                         download description as original html format, this won't work if json-description is enabled
   --json-description, -jd
                         download description as a JSON list
+  --html-description, -hd
+                        download description as original html format, this won't work if json-description is enabled
   --login               extract furaffinity cookies directly from your browser
   --index               create an index of downloaded files in an output folder
+  --real-category       this will download to its real category sub folder. it's useful when download favorites to avoid duplicate files
+  --request-compress    enable request compress which may save some bandwidth, but less file can be check by content-length. Since images won't be compress by default, it won't take much side effect to disable it by default
+  --check-file-size     check all files size when download, this will skip build-in archive
 
 Examples:
  python3 furaffinity-dl.py koul -> will download gallery of user koul
