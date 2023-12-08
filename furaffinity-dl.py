@@ -16,8 +16,23 @@ from Modules.functions import system_message_handler
 from Modules.index import check_file
 from Modules.index import start_indexing
 
+# Terminate the process
+import threading
+import queue
+q = queue.Queue()
+
+workers = []
+def worker():
+    while True:
+        item = q.get()
+        if item == 'shutdown':
+            break
+        download(item)
+        q.task_done()
+
 
 def main():
+    urls = []
     """loop over and download all images on the page(s)"""
     page_num = config.start
     with contextlib.suppress(DownloadComplete):
@@ -67,10 +82,16 @@ it\'s already downloaded{config.END}'
                     )
                     continue
 
-                download(img_url)
+                #download(img_url)
+                q.put(img_url)
                 sleep(config.interval)
-
+            q.join()
             page_num = next_button(page_url)
+    stop_threads = True
+    for _ in range(3):
+        q.put("shutdown")
+    for t in workers:
+        t.join()
 
 
 if __name__ == "__main__":
@@ -104,6 +125,13 @@ is inaccessible{config.END}"
     if config.download is not None:
         download(f"/view/{config.download}/")
         exit()
+        
+    stop_threads = False
+    for id in range(3):
+        print(id, 'started thread')
+        tmp = threading.Thread(target=worker, daemon=False)
+        workers.append(tmp)
+        tmp.start()
 
     if config.submissions is True:
         download_url = f"{config.BASE_URL}/msg/submissions"
@@ -117,7 +145,7 @@ downloading submissions{config.END}"
     if config.folder is not None:
         folder = config.folder.split("/")
         download_url = (
-            f"{config.BASE_URL}/gallery/{config.username}/folder/{config.folder[1]}"
+            f"{config.BASE_URL}/gallery/{config.username}/folder/{config.folder}"
         )
         main()
         print(
@@ -137,6 +165,7 @@ downloading "{config.folder[1]}"{config.END}'
             str.maketrans(config.username_replace_chars)
         )
         if username != "":
+
             print(f'{config.SUCCESS_COLOR}Now downloading "{username}"{config.END}')
             download_url = f"{config.BASE_URL}/{config.category}/{username}"
             print(f"Downloading page {config.start} - {download_url}/{config.start}")
@@ -145,3 +174,4 @@ downloading "{config.folder[1]}"{config.END}'
                 f'{config.SUCCESS_COLOR}Finished \
 downloading "{username}"{config.END}'
             )
+

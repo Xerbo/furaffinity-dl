@@ -56,7 +56,7 @@ def download(path, max_retries=5):
         if config.category != "gallery":
             output = f"{config.output_folder}/{author}/{config.category}"
         if config.folder is not None:
-            output = f"{config.output_folder}/{author}/{config.folder}"
+            output = f"{config.output_folder}/{author}/folders/{config.folder.split('/')[1]}"
     os.makedirs(output, exist_ok=True)
 
     output_path = f"{output}/{title} ({view_id}) - {filename}"

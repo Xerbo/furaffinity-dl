@@ -177,6 +177,9 @@ if username is not None:
         data = open(username[0]).read()
         username = filter(None, data.split("\n"))
 
+    if len(username) == 1 and args.folder is not None:
+        username = username[0]
+
 # Custom input
 cookies = args.cookies
 output_folder = args.output_folder

@@ -125,19 +125,14 @@ def next_button(page_url):
     if config.submissions is True:
         # unlike galleries that are sequentially numbered, submissions use a different scheme.
         # the "page_num" is instead: new~[set of numbers]@(12 or 48 or 72) if sorting by new
-        try:
-            parse_next_button = s.find("a", class_="button standard more").attrs.get(
-                "href"
-            )
-        except AttributeError:
-            try:
-                parse_next_button = s.find(
-                    "a", class_="button standard more-half"
-                ).attrs.get("href")
-            except AttributeError as e:
-                print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
-                raise DownloadComplete from e
-        page_num = parse_next_button.split("/")[-2]
+        parse_next_button = s.find("a", class_="button standard more")
+        if parse_next_button is None:
+                parse_next_button = s.find("a", class_="button standard more-half")
+        if parse_next_button is not None:
+            page_num = parse_next_button.attrs['href'].split("/")[-2]
+        else:
+            print(f"{config.WARN_COLOR}Unable to find next button{config.END}")
+            raise DownloadComplete
     elif config.category != "favorites":
         parse_next_button = s.find("button", class_="button standard", text="Next")
         if parse_next_button is None or parse_next_button.parent is None:
@@ -147,10 +142,9 @@ def next_button(page_url):
     else:
         parse_next_button = s.find("a", class_="button standard right", text="Next")
         page_num = fav_next_button(parse_next_button)
-    next_page_url = (parse_next_button.parent.attrs['action'] if 'action'
-                    in parse_next_button.parent.attrs else parse_next_button.attrs['href'])
+
     print(
-        f"Downloading page {page_num} - {config.BASE_URL}{next_page_url}"
+        f"Downloading page {page_num}"
     )
     return page_num
 
