@@ -150,7 +150,7 @@ def download(path):
         data['comments'].append({
             'cid': int(comment.find(class_='comment-link').attrs.get('href')[5:]),
             'parent_cid': parent_cid,
-            'content': comment.find(class_='comment_text').contents[0].strip(),
+            'content': comment.find(class_='user-submitted-links').text.strip().replace('\r\n', '\n'),
             'username': comment.find(class_='comment_username').text,
             'date': comment.find(class_='popup_date').attrs.get('title')
         })
@@ -206,7 +206,7 @@ while True:
         sleep(args.interval)
 
     if args.category != "favorites":
-        next_button = s.find('button', class_='button standard', text="Next")
+        next_button = s.find('button', class_='button standard', string="Next")
         if next_button is None or next_button.parent is None:
             print('Unable to find next button')
             break
@@ -215,7 +215,7 @@ while True:
 
         print('Downloading page', page_num, page_url)
     else:
-        next_button = s.find('a', class_='button mobile-button right', text="Next")
+        next_button = s.find('a', class_='button mobile-button right', string="Next")
         if next_button is None:
             print('Unable to find next button')
             break
