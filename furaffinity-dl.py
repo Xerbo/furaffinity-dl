@@ -133,7 +133,10 @@ def download(path):
     data = {
         'id': int(path.split('/')[-2:-1][0]),
         'filename': filename,
-        'author': s.find(class_='submission-id-sub-container').find('a').find('strong').text,
+
+        # this give you the username, if you want the display name instead, use:
+        # 'author': s.find(class_='c-usernameBlockSimple__displayName').text
+        'author': s.find(class_='c-usernameBlockSimple__displayName').attrs.get('title').strip(),
         'date': s.find(class_='popup_date').attrs.get('title'),
         'title': title,
         'description': get_description(s, get_html = False),
@@ -169,11 +172,18 @@ def download(path):
         if comment.find(class_='comment-link') is None:
             continue
 
+        # remove the tilda from the commenter name
+        comment.find(class_='c-usernameBlock__symbol').decompose()
+
         data['comments'].append({
             'cid': int(comment.find(class_='comment-link').attrs.get('href')[5:]),
             'parent_cid': parent_cid,
             'content': comment.find(class_='user-submitted-links').text.strip().replace('\r\n', '\n'),
-            'username': comment.find(class_='comment_username').text,
+            
+            # this gets you the username, if you want the display name, use this instead:
+            # 'username': comment.find(class_='c-usernameBlock__displayName js-displayName-block').text.strip(), 
+            'username': comment.find(class_='c-usernameBlock__userName js-userName-block').text.strip(),
+
             'date': comment.find(class_='popup_date').attrs.get('title')
         })
 
