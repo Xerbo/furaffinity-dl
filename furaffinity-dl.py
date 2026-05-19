@@ -44,7 +44,7 @@ if args.username is None:
 # Create output directory if it doesn't exist
 if args.output != '.':
     os.makedirs(args.output, exist_ok=True)
-    
+
 if args.metadir == None:
     args.metadir = args.output
 else:
@@ -213,25 +213,20 @@ while True:
         download(img.find('a').attrs.get('href'))
         sleep(args.interval)
 
-    if args.category != "favorites":
-        next_button = s.find('button', class_='button standard', string="Next")
-        if next_button is None or next_button.parent is None:
-            print('Unable to find next button')
-            break
+    next_button = s.find('button', class_='button standard', string="Next")
+    if next_button is None or next_button.parent is None:
+        print('Unable to find next button')
+        break
 
+    if args.category != "favorites":
         page_num = next_button.parent.attrs['action'].split('/')[-2]
 
         print('Downloading page', page_num, page_url)
     else:
-        next_button = s.find('a', class_='button mobile-button right', string="Next")
-        if next_button is None:
-            print('Unable to find next button')
-            break
-
         # unlike galleries that are sequentially numbered, favorites use a different scheme.
         # the "page_num" is instead: [set of numbers]/next (the trailing /next is required)
-        
-        next_page_link = next_button.attrs['href']
+
+        next_page_link = next_button.parent.attrs['action']
         next_fav_num = re.search(r'\/\d+', next_page_link)
 
         if next_fav_num == None:
