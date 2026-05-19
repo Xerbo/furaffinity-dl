@@ -129,6 +129,7 @@ def download(path):
         'date': s.find(class_='popup_date').attrs.get('title'),
         'title': title,
         'description': s.find(class_='submission-description').text.strip().replace('\r\n', '\n').strip(),
+        "description_html": s.find(class_='submission-description').prettify(),
         "tags": [],
         'category': stats["Category"],
         'type': stats["Theme"],
