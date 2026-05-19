@@ -1,5 +1,3 @@
-This branch is the development version of furaffinity-dl rewritten in python.
-
 # FurAffinity Downloader
 **furaffinity-dl** is a python script for batch downloading of galleries (and scraps/favourites) from furaffinity users.
 It was written for preservation of culture, to counter the people nuking their galleries every once a while.
@@ -56,14 +54,13 @@ You can also log in to FurAffinity in a web browser and load cookies to download
 DISCLAIMER: It is your own responsibility to check whether batch downloading is allowed by FurAffinity terms of service and to abide by them.
 ```
 
-You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/ganbo/) and [for Chrome based browsers](https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg)), you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user agent):
+You can also log in to download restricted content. To do that, log in to FurAffinity in your web browser, export cookies to a file from your web browser in Netscape format (there are extensions to do that [for Firefox](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally) and [for Chrome based browsers](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)), you can then pass them to the script with the `-c` flag, like this (you may also have to provide your user agent):
 
 `python3 furaffinity-dl.py -c cookies.txt -u 'Mozilla/5.0 ....' gallery letodoesart`
 
 ## TODO
 
  - Download user profile information.
- - "Classic" theme support
  - Login without having to export cookies
 
 ## Disclaimer
