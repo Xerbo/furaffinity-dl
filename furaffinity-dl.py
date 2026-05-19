@@ -141,13 +141,13 @@ def download(path):
 
     # Extact tags
     try:
-        for tag in s.find(class_='submission-tags').findAll(class_='tags'):
+        for tag in s.find(class_='submission-tags').find_all(class_='tags'):
             data['tags'].append(tag.find('a', href=re.compile('/search/.*')).text)
     except:
         pass
 
     # Extract comments
-    for comment in s.findAll(class_='comment_container'):
+    for comment in s.find_all(class_='comment_container'):
         temp_ele = comment.find(class_='comment-parent')
         parent_cid = None if temp_ele is None else int(temp_ele.attrs.get('href')[5:])
 
@@ -209,7 +209,7 @@ while True:
         break
 
     # Download all images on the page
-    for img in s.findAll('figure'):
+    for img in s.find_all('figure'):
         download(img.find('a').attrs.get('href'))
         sleep(args.interval)
 
