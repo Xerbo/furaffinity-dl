@@ -110,31 +110,39 @@ def download(path):
         message = s.find(class_='notice-message').find('div').find(class_="link-override").text.strip()
         raise Exception('System Message', message)
 
-    image = s.find(class_='download').find('a').attrs.get('href')
-    title = s.find(class_='submission-title').find('p').contents[0]
+    image = s.find('a', string='Download').attrs.get('href')
+    title = s.find('div', class_='submission-title').find('h2').text.strip()
     filename = image.split("/")[-1:][0]
+
+    stats_container = s.find(class_='submission-content-stats')
+    stat_keys = stats_container.find_all('span', recursive=False)[0].find_all('span')
+    stat_values = stats_container.find_all('span', recursive=False)[1].find_all('span')
+
+    stats = {}
+    for key, value in zip(stat_keys, stat_values):
+        stats[key.text.strip()] = value.text.strip()
+
     data = {
         'id': int(path.split('/')[-2:-1][0]),
         'filename': filename,
-        'author': s.find(class_='submission-id-sub-container').find('a').find('strong').text,
+        'author': s.find(class_='c-usernameBlockSimple__displayName').attrs.get('title').strip(),
         'date': s.find(class_='popup_date').attrs.get('title'),
         'title': title,
-        'description': s.find(class_='submission-description').text.strip().replace('\r\n', '\n'),
+        'description': s.find(class_='submission-description').text.strip().replace('\r\n', '\n').strip(),
         "tags": [],
-        'category': s.find(class_='info').find(class_='category-name').text,
-        'type': s.find(class_='info').find(class_='type-name').text,
-        'species': s.find(class_='info').findAll('div')[2].find('span').text,
-        'gender': s.find(class_='info').findAll('div')[3].find('span').text,
-        'views': int(s.find(class_='views').find(class_='font-large').text),
-        'favorites': int(s.find(class_='favorites').find(class_='font-large').text),
-        'rating': s.find(class_='rating-box').text.strip(),
+        'category': stats["Category"],
+        'type': stats["Theme"],
+        'species': stats["Species"],
+        'views': int(s.find(title='Views').find_all('div')[0].text),
+        'favorites': int(s.find(title='Favorites').find_all('div')[0].text),
+        'rating': s.find(class_=re.compile('c-contentRating--[a-z]*')).text.strip(),
         'comments': []
     }
 
     # Extact tags
     try:
-        for tag in s.find(class_='tags-row').findAll(class_='tags'):
-            data['tags'].append(tag.find('a').text)
+        for tag in s.find(class_='submission-tags').findAll(class_='tags'):
+            data['tags'].append(tag.find('a', href=re.compile('/search/.*')).text)
     except:
         pass
 
@@ -151,7 +159,7 @@ def download(path):
             'cid': int(comment.find(class_='comment-link').attrs.get('href')[5:]),
             'parent_cid': parent_cid,
             'content': comment.find(class_='user-submitted-links').text.strip().replace('\r\n', '\n'),
-            'username': comment.find(class_='comment_username').text,
+            'username': comment.find(class_='c-usernameBlock__userName').attrs.get('href')[5:],
             'date': comment.find(class_='popup_date').attrs.get('title')
         })
 
