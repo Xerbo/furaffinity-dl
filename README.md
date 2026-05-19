@@ -1,4 +1,6 @@
-Python rewrite has been released, I would appreciate it if some people would try it out. It lives on the `python` branch
+# NOTE
+
+This is the old bash version of furaffinity-dl, it doesn't work with modern FurAffinity and is kept available purely for archival reasons.
 
 # FurAffinity Downloader
 **furaffinity-dl** is a bash script for batch downloading of galleries and favorites from furaffinity.net users.
