@@ -79,7 +79,7 @@ page_num = args.start
 
 
 def download_file(url, fname, desc):
-    r = session.get(url, stream=True)
+    r = session.get(url, stream=True, timeout=30)
     if r.status_code != 200:
         print("Got a HTTP {} while downloading {}; skipping".format(r.status_code, fname))
         return False
@@ -102,7 +102,7 @@ def download_file(url, fname, desc):
 # The cursed function that handles downloading
 def download(path):
     page_url = '{}{}'.format(base_url, path)
-    response = session.get(page_url)
+    response = session.get(page_url, timeout=30)
     s = BeautifulSoup(response.text, 'html.parser')
 
     # System messages
@@ -188,7 +188,7 @@ while True:
         break
 
     page_url = '{}/{}'.format(gallery_url, page_num)
-    response = session.get(page_url)
+    response = session.get(page_url, timeout=30)
     s = BeautifulSoup(response.text, 'html.parser')
 
     # Account status
